@@ -27,10 +27,11 @@ if sys.stdout and hasattr(sys.stdout, 'buffer'):
 BASE_URL = 'https://www.qyyjt.cn'
 USER_DATA = Path.home() / '.config' / 'qyyjt-cli' / 'browser-profile'
 QUOTA_MARKS = ['今日查询次数已达上限', '查询次数已达上限', '次数已达上限']
+PERMISSION_MARKS = ['权限不足', '成为正式用户', '无权限查看', '开通会员', '会员专享', '付费解锁']
 STATIC_RE = re.compile(r'\.(js|css|png|jpe?g|gif|svg|woff2?|ttf|ico|map)(\?|$)', re.I)
 
-# 退出码约定: 0=成功 1=异常 2=配额停止 3=未登录 4=未找到
-EXIT_OK, EXIT_ERR, EXIT_QUOTA, EXIT_LOGIN, EXIT_NOTFOUND = 0, 1, 2, 3, 4
+# 退出码约定: 0=成功 1=异常 2=配额停止 3=未登录 4=未找到 5=权限不足
+EXIT_OK, EXIT_ERR, EXIT_QUOTA, EXIT_LOGIN, EXIT_NOTFOUND, EXIT_PERM = 0, 1, 2, 3, 4, 5
 
 
 class QuotaExceeded(Exception):
@@ -38,6 +39,11 @@ class QuotaExceeded(Exception):
 
 
 class NotLoggedIn(Exception):
+    pass
+
+
+class PermissionDenied(Exception):
+    """目标数据需要付费/会员权限, 页面明确提示无权查看。"""
     pass
 
 
@@ -83,6 +89,20 @@ async def check_quota(page, where=''):
         if i >= 0:
             ctx = body[max(0, i - 40):i + 90].replace('\n', '|')
             raise QuotaExceeded(f'{where} 检测到 [{m}]: ...{ctx}')
+
+
+async def check_permission(page, where=''):
+    """页面正文出现付费/会员权限提示 -> 抛 PermissionDenied
+
+    用途: 点击入口后若目标数据需要正式用户权限, 立即识别并把结果标记为
+    permission_denied, 而不是把残留的旧表格当作正常数据返回。
+    """
+    body = await page.evaluate('() => document.body ? document.body.innerText : ""')
+    for m in PERMISSION_MARKS:
+        i = body.find(m)
+        if i >= 0:
+            ctx = body[max(0, i - 40):i + 110].replace('\n', '|')
+            raise PermissionDenied(f'{where} 检测到权限提示 [{m}]: ...{ctx}')
 
 
 async def dismiss_modals(page):
@@ -178,20 +198,31 @@ ENTRY_KINDS = [
 
 
 async def collect_entries(page):
-    """枚举当前页面所有可点入口 -> [{kind, text, index}] (去重, 不点击)"""
+    """枚举当前页面所有可点入口 -> [{kind, text, index, expandable}] (去重, 不点击)
+
+    expandable=True 表示该入口是可展开的树父节点(如'企业融资'/'司法诉讼'),
+    点击只展开子树、不加载数据; 真正的数据入口是展开后出现的子节点/menu 项。
+    """
     entries = await page.evaluate("""(function() {
         var out = [];
-        function push(kind, els) {
+        function push(kind, els, isExpandable) {
             els.forEach(function(el, i) {
                 var t = (el.innerText || '').replace(/\\s+/g, ' ').trim();
                 if (!t || t.length > 40) return;
-                out.push({kind: kind, text: t, index: i});
+                out.push({kind: kind, text: t, index: i,
+                          expandable: isExpandable ? isExpandable(el) : false});
             });
         }
-        push('menu', document.querySelectorAll('.menu-item-wrapper'));
-        push('anchor', document.querySelectorAll('.ant-anchor-link-title'));
-        push('tree', document.querySelectorAll('.ant-tree-node-content-wrapper'));
-        push('tab', document.querySelectorAll('.ant-tabs-tab'));
+        function treeExpandable(el) {
+            var n = el.closest('.ant-tree-treenode');
+            if (!n) return false;
+            var c = n.className || '';
+            return c.indexOf('switcher-close') >= 0 || c.indexOf('switcher-open') >= 0;
+        }
+        push('menu', document.querySelectorAll('.menu-item-wrapper'), null);
+        push('anchor', document.querySelectorAll('.ant-anchor-link-title'), null);
+        push('tree', document.querySelectorAll('.ant-tree-node-content-wrapper'), treeExpandable);
+        push('tab', document.querySelectorAll('.ant-tabs-tab'), null);
         return out;
     })()""")
     seen, uniq = set(), []
@@ -285,18 +316,20 @@ async def click_entry(page, entry, wait_ms=5000):
 # ═══════════════════════════════════════════════════════════
 # 数据提取
 # ═══════════════════════════════════════════════════════════
-async def extract_tables(page):
-    """提取页面所有表格 -> [{table, headers, rows, rowCount}]"""
+async def extract_tables_once(page):
+    """提取页面所有表格(单次, 不翻页) -> [{table, headers, rows, rowCount}]
+
+    兼容 antd 固定列结构: 表头与数据行可能被拆成两个 <table>(表头表 tbody 为空,
+    数据表无 th)。以 .ant-table-wrapper 为容器合并 th + 全部 tbody 行。
+    """
     return await page.evaluate("""(function() {
         var out = [];
-        document.querySelectorAll('table').forEach(function(t, i) {
-            var headers = [];
+        function grab(t) {
+            var headers = [], rows = [];
             t.querySelectorAll('th').forEach(function(th) {
                 var h = (th.innerText || '').trim().split('\\n')[0];
                 if (h && headers.indexOf(h) < 0) headers.push(h);
             });
-            if (!headers.length) return;
-            var rows = [];
             t.querySelectorAll('tbody tr').forEach(function(tr) {
                 var cells = [];
                 tr.querySelectorAll('td').forEach(function(td) {
@@ -304,10 +337,124 @@ async def extract_tables(page):
                 });
                 if (cells.length) rows.push(cells);
             });
-            out.push({table: i + 1, headers: headers, rows: rows, rowCount: rows.length});
-        });
+            return {headers: headers, rows: rows};
+        }
+        function pushTable(idx, tables) {
+            var headers = [], rows = [];
+            tables.forEach(function(t) {
+                var g = grab(t);
+                g.headers.forEach(function(h) { if (headers.indexOf(h) < 0) headers.push(h); });
+                rows = rows.concat(g.rows);
+            });
+            if (!headers.length && !rows.length) return;
+            out.push({table: idx, headers: headers, rows: rows, rowCount: rows.length});
+        }
+        var wrappers = document.querySelectorAll('.ant-table-wrapper');
+        if (wrappers.length) {
+            wrappers.forEach(function(w, i) {
+                pushTable(i + 1, w.querySelectorAll('table'));
+            });
+        } else {
+            document.querySelectorAll('table').forEach(function(t, i) {
+                pushTable(i + 1, [t]);
+            });
+        }
         return out;
     })()""")
+
+
+async def extract_tables(page, paginate=False, max_pages=5):
+    """提取页面所有表格; paginate=True 时对每个 antd 表格自动翻页合并(耗配额!)
+
+    注意: 点击下一页会触发后端分页请求, 消耗每日查询配额。max_pages 控制单表
+    最大翻页数(默认 5 页, 即最多 4 次翻页)。行按内容去重。
+    """
+    tables = await extract_tables_once(page)
+    if not paginate or not tables:
+        return tables
+    for ti, t in enumerate(tables):
+        seen_rows = {tuple(r) for r in t['rows']}
+        for _ in range(max(0, max_pages - 1)):
+            clicked = await page.evaluate("""(function(ti) {
+                var wrappers = document.querySelectorAll('.ant-table-wrapper');
+                var w = wrappers[ti];
+                if (!w) return false;
+                var next = w.querySelector('.ant-pagination-next');
+                if (!next || (next.className || '').indexOf('ant-pagination-disabled') >= 0)
+                    return false;
+                next.click();
+                return true;
+            })()""", ti)
+            if not clicked:
+                break
+            await page.wait_for_timeout(1800)
+            await check_quota(page, f'翻页(表{ti + 1})')
+            rows = await page.evaluate("""(function(ti) {
+                var w = document.querySelectorAll('.ant-table-wrapper')[ti];
+                if (!w) return [];
+                var rows = [];
+                w.querySelectorAll('tbody tr').forEach(function(tr) {
+                    var cells = [];
+                    tr.querySelectorAll('td').forEach(function(td) {
+                        cells.push((td.innerText || '').trim());
+                    });
+                    if (cells.length) rows.push(cells);
+                });
+                return rows;
+            })()""", ti)
+            new_rows = [r for r in rows if tuple(r) not in seen_rows]
+            if not new_rows:
+                break  # 下一页无新数据(或已到末页)
+            for r in new_rows:
+                seen_rows.add(tuple(r))
+                t['rows'].append(r)
+        t['rowCount'] = len(t['rows'])
+        t['paginated'] = True
+    return tables
+
+
+async def extract_blocks(page, max_items=200):
+    """提取非 table 渲染的数据: 键值对(descriptions)/列表项/卡片块。
+
+    企业预警通大量数据(司法案件、舆情指数等)用 div/卡片渲染, 不进入 <table>。
+    作为 extract_tables 的降级通道返回结构化块: [{type, label, title, value}]。
+    """
+    return await page.evaluate("""(function(maxItems) {
+        var out = [];
+        // 1) 键值对块 (antd descriptions)
+        document.querySelectorAll('.ant-descriptions-item').forEach(function(it) {
+            var label = it.querySelector('.ant-descriptions-item-label');
+            var content = it.querySelector('.ant-descriptions-item-content');
+            if (label && content) {
+                var l = (label.innerText || '').replace(/\\s+/g, ' ').trim();
+                var c = (content.innerText || '').replace(/\\s+/g, ' ').trim();
+                if (l && c && out.length < maxItems)
+                    out.push({type: 'kv', label: l.slice(0, 60), value: c.slice(0, 300)});
+            }
+        });
+        // 2) 列表项
+        var seenLi = new Set();
+        document.querySelectorAll('.ant-list-item').forEach(function(li) {
+            var t = (li.innerText || '').replace(/\\s+/g, ' ').trim();
+            if (t && t.length >= 2 && t.length <= 400 && !seenLi.has(t) && out.length < maxItems) {
+                seenLi.add(t);
+                out.push({type: 'list', value: t});
+            }
+        });
+        // 3) 卡片块
+        var seenCard = new Set();
+        document.querySelectorAll('.ant-card').forEach(function(c) {
+            var t = (c.innerText || '').replace(/\\s+/g, ' ').trim();
+            if (t && t.length <= 800 && !seenCard.has(t) && out.length < maxItems) {
+                seenCard.add(t);
+                var title = c.querySelector('.ant-card-head-title');
+                out.push({type: 'card',
+                          title: title ? (title.innerText || '').trim() : '',
+                          value: t});
+            }
+        });
+        return out.slice(0, maxItems);
+    })()""", max_items)
 
 
 async def page_text(page, maxlen=8000):

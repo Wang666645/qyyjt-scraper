@@ -35,8 +35,8 @@ $S  = 'qyyjt-plugin\scripts'
 
 1. **登录态**：位于 `%USERPROFILE%\.config\qyyjt-cli\browser-profile`。脚本输出 `NOT LOGGED IN`（退出码 3）时，先运行 `qyyjt-plugin\scripts\login_browser.py` 扫码登录。
 2. **配额**：平台有每日查询次数上限。脚本检测到"今日查询次数已达上限"会以退出码 2 停止——**立即停止并向用户汇报，不要重试、不要换参数硬闯**。
-3. **退出码**：0=成功，2=配额停止，3=未登录，4=未找到/入口不存在。
-4. **输出**：默认打印摘要；`--out .json` 结构化结果；`--out .xlsx` 多 Sheet Excel；`--full-api` 附带 API 完整 JSON。
+3. **退出码**：0=成功，2=配额停止，3=未登录，4=未找到/入口不存在，**5=权限不足**（目标数据需正式会员，结果已标记 `permission_denied`，如实汇报而非当作"无数据"）。
+4. **输出**：默认打印摘要；`--out .json` 结构化结果（含 tables/blocks/api/text_snapshot）；`--out .xlsx` 多 Sheet Excel；`--full-api` 附带 API 完整 JSON。表格可用 `--max-pages N` 翻页合并（耗配额）。
 5. **并发**：不要同时运行多个抓取实例（共享浏览器 profile，会冲突）。
 6. **批量任务**（如债券核查）：逐公司跑 `--entry 债券融资`，判据为页面出现存续债券数据（债券表有数据行或存量概览"债券N只"N>0）；名单自带"城投发债/民企/风险N"标签是源数据，与核查结论无关。
 7. **改版应对**：若选择器失效，先 `--list` 观察页面入口，再调整 `qyyjt_common.py` 的 `ENTRY_KINDS` 选择器。

@@ -25,8 +25,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from qyyjt_common import (  # noqa: E402
     ApiCapture, EXIT_LOGIN, EXIT_NOTFOUND, EXIT_OK, EXIT_QUOTA,
-    QuotaExceeded, NotLoggedIn, check_quota, click_entry, close_browser,
-    collect_entries, expand_tree_nodes, extract_tables, goto_overview,
+    PermissionDenied, QuotaExceeded, NotLoggedIn, check_permission,
+    check_quota, click_entry, close_browser, collect_entries,
+    expand_tree_nodes, extract_blocks, extract_tables, goto_overview,
     open_browser, pick_best, search_company, stat_lines,
 )
 
@@ -103,17 +104,25 @@ async def do_discover(args):
             try:
                 ok = await click_entry(pg, e)
                 await cap.drain()
-                tables = await extract_tables(pg)
-                stats = await stat_lines(pg, 12)
                 rec = dict(e)
                 rec['api'] = cap.summary()
-                rec['tables'] = [{'headers': t['headers'], 'rowCount': t['rowCount']}
-                                 for t in tables]
-                rec['stats'] = stats
+                try:
+                    await check_permission(pg, f"入口[{e['text']}]")
+                    tables = await extract_tables(pg)
+                    blocks = await extract_blocks(pg)
+                    stats = await stat_lines(pg, 12)
+                    rec['tables'] = [{'headers': t['headers'], 'rowCount': t['rowCount']}
+                                     for t in tables]
+                    rec['blocks'] = blocks
+                    rec['stats'] = stats
+                    api_txt = '; '.join(f"{a['code']}({a['rowCount']}行)" for a in rec['api']) or '无API'
+                    log(f'    API: {api_txt}')
+                    log(f'    表格: {len(tables)} 张, 内容块: {len(blocks)} 个')
+                except PermissionDenied as ex:
+                    rec['permission_denied'] = True
+                    rec['permission_msg'] = str(ex)
+                    log(f'    !! 权限不足(需正式会员), 已标记')
                 map_data['entries'].append(rec)
-                api_txt = '; '.join(f"{a['code']}({a['rowCount']}行)" for a in rec['api']) or '无API'
-                log(f'    API: {api_txt}')
-                log(f'    表格: {len(tables)} 张')
             except QuotaExceeded as ex:
                 log(f'!!! 配额停止: {ex}')
                 status = EXIT_QUOTA

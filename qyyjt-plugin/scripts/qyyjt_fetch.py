@@ -14,9 +14,10 @@
   python qyyjt_fetch.py --url "https://www.qyyjt.cn/s?tab=securities&k=重庆"  # 任意 URL
   python qyyjt_fetch.py "企业名" --entry "债券融资" --out result.xlsx
   python qyyjt_fetch.py "企业名" --entry "债券融资" --out result.json --full-api
+  python qyyjt_fetch.py "企业名" --entry "对外投资企业" --max-pages 5  # 翻页合并
 
 输出: 默认 stdout 打印摘要; --out .json 存结构化结果; --out .xlsx 存多 Sheet Excel。
-退出码: 0=成功 2=配额停止 3=未登录 4=未找到/入口不存在
+退出码: 0=成功 2=配额停止 3=未登录 4=未找到/入口不存在 5=权限不足(需正式会员)
 """
 import argparse
 import asyncio
@@ -27,9 +28,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from qyyjt_common import (  # noqa: E402
-    ApiCapture, EXIT_LOGIN, EXIT_NOTFOUND, EXIT_OK, EXIT_QUOTA,
-    QuotaExceeded, NotLoggedIn, click_entry, close_browser, collect_entries,
-    expand_tree_for_keyword, expand_tree_nodes, extract_tables, goto_overview,
+    ApiCapture, EXIT_LOGIN, EXIT_NOTFOUND, EXIT_OK, EXIT_PERM, EXIT_QUOTA,
+    PermissionDenied, QuotaExceeded, NotLoggedIn, check_permission,
+    click_entry, close_browser, collect_entries, expand_tree_for_keyword,
+    expand_tree_nodes, extract_blocks, extract_tables, goto_overview,
     open_browser, page_text, pick_best, search_company, stat_lines,
 )
 
@@ -53,37 +55,56 @@ def log(msg):
     print(msg, flush=True)
 
 
-def match_entry(entries, query, fuzzy=True):
-    """入口匹配: 精确 -> 子串(入口含查询词优先) -> 别名 -> 模糊(可选)。返回 entry 或 None"""
+def match_entry(entries, query, fuzzy=True, prefer_leaf=True):
+    """入口匹配: 精确 -> 子串(入口含查询词优先) -> 别名 -> 模糊(可选)。
+
+    prefer_leaf=True 时在同等匹配中优先返回非可展开入口(数据入口), 避免
+    命中 tree 父节点(如'司法诉讼'树)这种"只展开不加载数据"的节点。
+    返回 entry 或 None。
+    """
     q = (query or '').strip()
     if not q:
         return None
+    candidates = []
     for e in entries:
         if e['text'] == q:
-            return e
-    for e in entries:
-        if q in e['text']:
-            return e
-    for e in entries:
-        if e['text'] in q:
-            return e
-    alias = ALIASES.get(q.lower())
-    if alias:
+            candidates.append(e)
+            break
+    if not candidates:
         for e in entries:
-            if alias in e['text'] or e['text'] in alias:
-                return e
-    if fuzzy:
+            if q in e['text']:
+                candidates.append(e)
+    if not candidates:
+        for e in entries:
+            if e['text'] in q:
+                candidates.append(e)
+    if not candidates:
+        alias = ALIASES.get(q.lower())
+        if alias:
+            for e in entries:
+                if alias in e['text'] or e['text'] in alias:
+                    candidates.append(e)
+    if not candidates and fuzzy:
         import difflib
         best = difflib.get_close_matches(q, [e['text'] for e in entries], n=1, cutoff=0.66)
         if best:
             for e in entries:
                 if e['text'] == best[0]:
-                    return e
-    return None
+                    candidates.append(e)
+    if not candidates:
+        return None
+    if prefer_leaf:
+        for e in candidates:
+            if not e.get('expandable'):
+                return e
+    return candidates[0]
 
 
 def summarize(rec):
     """结果记录 -> 打印摘要"""
+    if rec.get('permission_denied'):
+        log(f"  [{rec.get('entry','?')}] !! 权限不足: {rec.get('permission_msg','')[:120]}")
+        return
     log(f"  [{rec.get('entry','?')}]")
     apis = rec.get('api', [])
     if apis:
@@ -91,7 +112,15 @@ def summarize(rec):
             keys = ','.join(a['keys'][:6])
             log(f"    API {a['code']}  (命中{a['count']}次, 数据{a['rowCount']}行, 键: {keys})")
     for t in rec.get('tables', []):
-        log(f"    表格: {len(t['headers'])}列 {t['rowCount']}行  表头: {','.join(t['headers'][:8])}")
+        pages = f" (已翻页合并)" if t.get('paginated') else ""
+        log(f"    表格: {len(t['headers'])}列 {t['rowCount']}行{pages}  表头: {','.join(t['headers'][:8])}")
+    blocks = rec.get('blocks', [])
+    if blocks:
+        kvs = [b for b in blocks if b['type'] == 'kv']
+        lists = [b for b in blocks if b['type'] == 'list']
+        cards = [b for b in blocks if b['type'] == 'card']
+        log(f"    内容块: 键值对{kvs and len(kvs) or 0} 列表{lists and len(lists) or 0} 卡片{cards and len(cards) or 0}"
+            + (f"  示例: {lists[0]['value'][:60]}" if lists else ""))
     st = rec.get('stats', [])
     if st:
         log(f"    统计: {' | '.join(st[:6])}")
@@ -123,14 +152,31 @@ def to_excel(out_path, results):
     log(f'已写入 Excel: {out_path}  ({len(results)} 个入口, {len(wb.sheetnames)} 个 Sheet)')
 
 
-async def fetch_entry(pg, entry, company_name, keep_full=False, wait_ms=5000):
-    """点击入口并抓取: API 摘要 + 表格 + 统计 + 正文快照"""
+async def fetch_entry(pg, entry, company_name, keep_full=False, wait_ms=5000,
+                      max_pages=0):
+    """点击入口并抓取: API 摘要 + 表格(可翻页) + 内容块 + 统计 + 正文快照。
+
+    权限处理: 点击后若页面出现"权限不足/成为正式用户"等提示, 返回
+    permission_denied=True 的记录(不把残留表格当作正常数据)。
+    """
     cap = ApiCapture(pg, keep_full=keep_full)
     ok = await click_entry(pg, entry, wait_ms=wait_ms)
     await cap.drain()
     if not ok:
         return None
-    tables = await extract_tables(pg)
+    # 权限识别: 必须在提取数据之前, 避免残留表格被当成结果
+    try:
+        await check_permission(pg, f"入口[{entry['text']}]")
+    except PermissionDenied as ex:
+        return {
+            'company': company_name, 'entry': entry['text'], 'kind': entry['kind'],
+            'time': datetime.now().isoformat(timespec='seconds'),
+            'permission_denied': True, 'permission_msg': str(ex),
+            'api': cap.summary(), 'tables': [], 'blocks': [], 'stats': [],
+            'text_snapshot': await page_text(pg, 3000),
+        }
+    tables = await extract_tables(pg, paginate=max_pages > 0, max_pages=max_pages or 5)
+    blocks = await extract_blocks(pg)
     stats = await stat_lines(pg, 20)
     rec = {
         'company': company_name,
@@ -139,6 +185,7 @@ async def fetch_entry(pg, entry, company_name, keep_full=False, wait_ms=5000):
         'time': datetime.now().isoformat(timespec='seconds'),
         'api': cap.summary(),
         'tables': tables,
+        'blocks': blocks,
         'stats': stats,
         'text_snapshot': await page_text(pg, 4000),
     }
@@ -150,13 +197,39 @@ async def fetch_entry(pg, entry, company_name, keep_full=False, wait_ms=5000):
 async def cascade_find_entry(pg, query, code, max_parents=4):
     """级联查找入口: 当前详情页匹配失败时, 依次点击含关键词片段的父入口
     (menu/tree), 在新页面重新枚举再匹配(锚点/tab 型入口如 '债券融资' 藏在
-    '融资速览' 页面里)。返回 (最终入口列表, 匹配入口) 或 (None, None)。"""
+    '融资速览' 页面里)。返回 (最终入口列表, 匹配入口) 或 (None, None)。
+
+    下沉处理: 若匹配到的入口是可展开的树父节点(如'司法诉讼'/'企业融资'),
+    点击展开后重新枚举并继续用同关键词匹配——真正加载数据的是展开后出现的
+    menu 项(如'司法案件 14')。同一入口只展开一次, 防止死循环。
+    """
     entries = await collect_entries(pg)
     e = match_entry(entries, query, fuzzy=False)
+    # ── 下沉: 可展开树父节点 -> 展开 -> 继续匹配 ──
+    expanded = set()
+    for _ in range(3):
+        if e is None or not e.get('expandable'):
+            break
+        key = (e['kind'], e['text'])
+        if key in expanded:
+            log(f'    入口[{e["text"]}] 已展开过且无更深入口, 停止下沉')
+            break
+        expanded.add(key)
+        log(f'    入口[{e["text"]}] 为可展开树节点, 点击展开后继续下沉匹配...')
+        try:
+            await click_entry(pg, e, wait_ms=2500)
+            entries = await collect_entries(pg)
+        except QuotaExceeded as ex:
+            log(f'    配额: {ex}')
+            break
+        e = match_entry(entries, query, fuzzy=False)
+        if e is not None and not e.get('expandable'):
+            log(f'    下沉命中数据入口: [{e["kind"]}] {e["text"]}')
+            return entries, e
     if e is not None:
         return entries, e
 
-    # 候选父入口: 文本含查询词片段的 menu/tree 入口
+    # ── 级联: 点击含关键词片段的父入口, 在新页面匹配(锚点/tab 型) ──
     cands = [c for c in [query, query[-2:], query[:2], query[-3:], query[:3]] if c]
     parents, seen = [], set()
     for c in cands:
@@ -200,12 +273,25 @@ async def do_fetch(args):
         await pg.goto(args.url, wait_until='domcontentloaded', timeout=25000)
         await pg.wait_for_timeout(4000)
         await cap.drain()
-        tables = await extract_tables(pg)
+        try:
+            await check_permission(pg, 'URL')
+        except PermissionDenied as ex:
+            rec = {'company': '', 'entry': args.url, 'kind': 'url',
+                   'time': datetime.now().isoformat(timespec='seconds'),
+                   'permission_denied': True, 'permission_msg': str(ex),
+                   'api': cap.summary(), 'tables': [], 'blocks': [], 'stats': [],
+                   'text_snapshot': await page_text(pg, 3000)}
+            summarize(rec)
+            await close_browser(p, b)
+            return finish(args, [rec]) if args.out else EXIT_PERM
+        tables = await extract_tables(pg, paginate=args.max_pages > 0,
+                                      max_pages=args.max_pages or 5)
+        blocks = await extract_blocks(pg)
         stats = await stat_lines(pg, 30)
         rec = {'company': '', 'entry': args.url, 'kind': 'url',
                'time': datetime.now().isoformat(timespec='seconds'),
-               'api': cap.summary(), 'tables': tables, 'stats': stats,
-               'text_snapshot': await page_text(pg, 6000)}
+               'api': cap.summary(), 'tables': tables, 'blocks': blocks,
+               'stats': stats, 'text_snapshot': await page_text(pg, 6000)}
         if args.full_api:
             rec['api_full'] = cap.full()
         results = [rec]
@@ -242,16 +328,14 @@ async def do_fetch(args):
 
     # ── 抓指定入口 ──
     if args.entry:
-        e = match_entry(entries, args.entry, fuzzy=False)
-        if e is None:
-            # 级联查找: 展开树 / 点击父入口(锚点型入口如'债券融资'在'融资速览'页内)
-            log('入口未直接匹配, 级联查找(展开树/父入口)...')
-            try:
-                entries, e = await cascade_find_entry(pg, args.entry, code)
-            except QuotaExceeded as ex:
-                log(f'!! 级联查找触发配额: {ex}')
-                await close_browser(p, b)
-                return EXIT_QUOTA
+        # 统一走级联: 直接匹配 -> 可展开树节点下沉 -> 父入口级联
+        log('定位入口: 直接匹配/树节点下沉/父入口级联...')
+        try:
+            entries, e = await cascade_find_entry(pg, args.entry, code)
+        except QuotaExceeded as ex:
+            log(f'!! 级联查找触发配额: {ex}')
+            await close_browser(p, b)
+            return EXIT_QUOTA
         if e is None and args.expand:
             log('--expand: 全量展开树菜单...')
             try:
@@ -266,32 +350,43 @@ async def do_fetch(args):
             await close_browser(p, b)
             return EXIT_NOTFOUND
         log(f'=== 抓取入口 [{e["kind"]}] {e["text"]} ===')
-        rec = await fetch_entry(pg, e, matched, keep_full=args.full_api, wait_ms=args.wait)
+        rec = await fetch_entry(pg, e, matched, keep_full=args.full_api,
+                                wait_ms=args.wait, max_pages=args.max_pages)
         if rec is None:
             log('!! 点击入口失败')
             await close_browser(p, b)
             return EXIT_ERR
         summarize(rec)
         results = [rec]
+        # 单入口权限不足: 结果已标记, 退出码 5 明确告知
+        if rec.get('permission_denied'):
+            await close_browser(p, b)
+            finish(args, results)
+            return EXIT_PERM
 
     # ── 抓全部入口 ──
     elif args.all:
         log(f'=== 抓取全部 {len(entries)} 个入口 (注意配额) ===')
         status = EXIT_OK
+        denied = 0
         for i, e in enumerate(entries, 1):
             log(f'[{i}/{len(entries)}] 点击 ({e["kind"]}) {e["text"]} ...')
             try:
                 rec = await fetch_entry(pg, e, matched, keep_full=args.full_api,
-                                        wait_ms=args.wait)
+                                        wait_ms=args.wait, max_pages=args.max_pages)
                 if rec:
                     summarize(rec)
                     results.append(rec)
+                    if rec.get('permission_denied'):
+                        denied += 1
             except QuotaExceeded as ex:
                 log(f'!!! 配额停止: {ex}')
                 status = EXIT_QUOTA
                 break
             # 回到详情页
             await goto_overview(pg, code, wait_menu=False)
+        if denied and status == EXIT_OK:
+            log(f'!! 其中 {denied} 个入口因权限不足未取到数据')
         if status != EXIT_OK:
             await close_browser(p, b)
             if args.out:
@@ -331,6 +426,8 @@ async def main():
     ap.add_argument('--out', default=None, help='输出文件 (.json/.xlsx)')
     ap.add_argument('--full-api', action='store_true', help='保留完整 API JSON')
     ap.add_argument('--wait', type=int, default=5000, help='点击后等待毫秒数(默认5000)')
+    ap.add_argument('--max-pages', type=int, default=0,
+                    help='表格翻页上限(默认0=不翻页; 如 5=每表最多翻到5页; 翻页耗查询配额)')
     ap.add_argument('--profile', default=None, help='浏览器 profile 目录')
     ap.add_argument('--headed', action='store_true', help='有头模式(调试)')
     args = ap.parse_args()
@@ -350,6 +447,9 @@ async def main():
     except QuotaExceeded as ex:
         log(f'!!! {ex}')
         return EXIT_QUOTA
+    except PermissionDenied as ex:
+        log(f'!! 权限不足: {ex}')
+        return EXIT_PERM
     except Exception as ex:
         log(f'!! 异常 {type(ex).__name__}: {ex}')
         import traceback

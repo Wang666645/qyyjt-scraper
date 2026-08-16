@@ -1,0 +1,17 @@
+# Python 缓存
+__pycache__/
+*.py[cod]
+
+# 日志 / 临时文件
+*.log
+*.tmp
+*.bak
+
+# 操作系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 抓取输出产物(可能含业务数据, 不提交; 建议输出到 qyyjt-plugin/output/)
+qyyjt-plugin/output/
+*.xlsx

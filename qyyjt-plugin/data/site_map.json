@@ -1,0 +1,96 @@
+{
+ "generated_at": "2026-08-16T17:58:31",
+ "mode": "site",
+ "company": null,
+ "entries": [],
+ "site": {
+  "links": [
+   {
+    "text": "监控",
+    "href": "/combination"
+   },
+   {
+    "text": "企业",
+    "href": "/"
+   },
+   {
+    "text": "债券",
+    "href": "/"
+   },
+   {
+    "text": "股票",
+    "href": "/"
+   },
+   {
+    "text": "基金",
+    "href": "/"
+   },
+   {
+    "text": "金融机构",
+    "href": "/"
+   },
+   {
+    "text": "区域",
+    "href": "/"
+   },
+   {
+    "text": "行情",
+    "href": "/"
+   },
+   {
+    "text": "资讯",
+    "href": "/"
+   },
+   {
+    "text": "插件",
+    "href": "/guide/pluginIntro/basicsInfo"
+   },
+   {
+    "text": "帮助",
+    "href": "/"
+   },
+   {
+    "text": "中科曙光",
+    "href": "/"
+   },
+   {
+    "text": "中际旭创",
+    "href": "/"
+   },
+   {
+    "text": "京东集团",
+    "href": "/"
+   },
+   {
+    "text": "央行开展10000亿元买断式逆回购操作",
+    "href": "/"
+   },
+   {
+    "text": "上海发文进一步促进民间投资发展",
+    "href": "/"
+   },
+   {
+    "text": "五粮液又推出“控货挺价”措施",
+    "href": "/"
+   },
+   {
+    "text": "上海大智慧财汇数据科技有限公司",
+    "href": "http://finchina.qyyjt.cn"
+   },
+   {
+    "text": "沪ICP备06009028号-8",
+    "href": "https://beian.miit.gov.cn/"
+   },
+   {
+    "text": "沪公网安备：31011502015829号",
+    "href": "http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011502015829"
+   },
+   {
+    "text": "企业法人营业执照",
+    "href": "https://cdn.finchina.com/app/h5/introduce/license.png"
+   }
+  ],
+  "search_url_template": "/s?tab=securities&k=<关键词>",
+  "detail_url_template": "/detail/enterprise/overview?code=<CODE>&type=company"
+ }
+}

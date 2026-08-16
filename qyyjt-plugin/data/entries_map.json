@@ -1,0 +1,78 @@
+{
+ "generated_at": "2026-08-16T17:56:55",
+ "mode": "company",
+ "company": [
+  "BB276523229AE728755938AFFAC18A02",
+  "重庆三峡发展集团有限公司"
+ ],
+ "entries": [
+  {
+   "kind": "menu",
+   "text": "企业速览",
+   "index": 0,
+   "api": [],
+   "tables": [
+    {
+     "headers": [
+      "序号",
+      "股东名称",
+      "持股数量/认缴金额",
+      "持股比例",
+      "法定代表人",
+      "成立日期",
+      "企业状态"
+     ],
+     "rowCount": 2
+    }
+   ],
+   "stats": [
+    "监控",
+    "企业",
+    "债券",
+    "股票",
+    "基金",
+    "金融机构",
+    "区域",
+    "行情",
+    "资讯",
+    "插件",
+    "帮助",
+    "我的常用"
+   ]
+  },
+  {
+   "kind": "menu",
+   "text": "AI舆情总结",
+   "index": 1,
+   "api": [
+    {
+     "code": "/getData.action?getData.action",
+     "url": "https://www.qyyjt.cn/getData.action?_t=9999900005",
+     "count": 1,
+     "keys": [
+      "data",
+      "returncode",
+      "accessTokenTime",
+      "accessToken",
+      "refreshTokenTime",
+      "key",
+      "info",
+      "refreshToken"
+     ],
+     "rowCount": 0
+    }
+   ],
+   "tables": [],
+   "stats": []
+  },
+  {
+   "kind": "menu",
+   "text": "动态监测",
+   "index": 2,
+   "api": [],
+   "tables": [],
+   "stats": []
+  }
+ ],
+ "site": {}
+}

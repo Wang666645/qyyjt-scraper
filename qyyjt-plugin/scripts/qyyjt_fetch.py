@@ -29,13 +29,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from qyyjt_common import (  # noqa: E402
     ApiCapture, EXIT_LOGIN, EXIT_NOTFOUND, EXIT_OK, EXIT_PERM, EXIT_QUOTA,
-    PermissionDenied, QuotaExceeded, NotLoggedIn, check_permission,
+    PermissionDenied, QuotaExceeded, NotLoggedIn, account_id, check_permission,
     click_entry, click_path, close_browser, collect_entries, collect_tree,
     expand_tree_for_keyword, expand_tree_nodes, extract_blocks, extract_tables,
     flatten_tree, goto_overview, open_browser, page_text, pick_best,
-    search_company, stat_lines,
+    search_company, stat_lines, tree_fingerprint,
 )
-from branch_nav import BranchNavigator, MatrixParser, ParamRewriter  # noqa: E402
+from branch_nav import (BranchNavigator, MatrixParser, ParamRewriter,
+                        locate_path_fuzzy)  # noqa: E402
 
 DATA_DIR = Path(__file__).parent.parent / 'data'
 ALIASES = {
@@ -344,6 +345,97 @@ async def do_fetch(args):
     log(f'匹配企业: {matched} (code={code})')
     await goto_overview(pg, code)
 
+    # ── --scan: 结构扫描(主干-分支清单, 不点叶子, 省配额) ──
+    if args.scan:
+        from branch_nav import BranchNavigator as _Nav
+        nav = _Nav(pg, log)
+        scan_paths, seen = [], set()
+        dir_count = [0]
+
+        async def scan_reset():
+            await goto_overview(pg, code)
+            for _ in range(12):
+                n = await pg.evaluate(
+                    '() => document.querySelectorAll(".ant-tree-treenode").length')
+                if n > 10:
+                    return
+                await pg.wait_for_timeout(1000)
+
+        async def scan_dir(path):
+            if dir_count[0] >= 30:
+                return
+            dir_count[0] += 1
+            e = await nav.navigate(path, wait_ms=2500)
+            if e is None:
+                log(f'  !! 目录展开失败: {" / ".join(path)} (站点端未响应)')
+                scan_paths.append({'path': path, 'type': 'dir', 'expand_failed': True})
+                return
+            tree = await collect_tree(pg)
+            root = locate_path_fuzzy(tree, path)
+            if root is None:
+                return
+            for child in root.get('children', []):
+                p = path + [child['text']]
+                key = ' / '.join(p)
+                if key in seen:
+                    continue
+                seen.add(key)
+                if child.get('expandable'):
+                    scan_paths.append({'path': p, 'type': 'dir'})
+                    await scan_dir(p)
+                else:
+                    scan_paths.append({'path': p, 'type': 'leaf'})
+
+        def collect_visible(ns, prefix):
+            for n in ns:
+                p = prefix + [n['text']]
+                key = ' / '.join(p)
+                if key in seen:
+                    continue
+                seen.add(key)
+                if n.get('expandable'):
+                    scan_paths.append({'path': p, 'type': 'dir'})
+                    collect_visible(n.get('children', []), p)
+                else:
+                    scan_paths.append({'path': p, 'type': 'leaf'})
+
+        log('=== 结构扫描(逐目录展开, 约 10-12 次查询/2-3 分钟) ===')
+        collect_visible(await collect_tree(pg), [])
+        tree0 = await collect_tree(pg)
+        for child in tree0:
+            if not child.get('expandable'):
+                continue
+            await scan_reset()
+            await scan_dir([child['text']])
+
+        fp = await tree_fingerprint(pg)
+        acct = await account_id(pg)
+        scan_data = {
+            'schema': 'v4',
+            'subjectType': 'company',
+            'subjectName': matched,
+            'code': code,
+            'accountId': acct,
+            'treeFingerprint': fp,
+            'probedAt': datetime.now().isoformat(timespec='seconds'),
+            'paths': scan_paths,
+        }
+        out = Path(args.out) if args.out else DATA_DIR / f'scan_{matched}.json'
+        out.parent.mkdir(parents=True, exist_ok=True)
+        with open(out, 'w', encoding='utf-8') as f:
+            json.dump(scan_data, f, ensure_ascii=False, indent=1)
+        dirs = [p for p in scan_paths if p['type'] == 'dir']
+        leaves = [p for p in scan_paths if p['type'] == 'leaf']
+        log(f'扫描完成: {len(dirs)} 目录 + {len(leaves)} 叶子 = {len(scan_paths)} 条路径')
+        log('=== 主干-分支清单 ===')
+        for p in scan_paths:
+            mark = ' [展开失败]' if p.get('expand_failed') else ''
+            log(f'  {"D " if p["type"]=="dir" else "  "}{" / ".join(p["path"])}{mark}')
+        log(f'已保存: {out}  (账号 {acct}, 树指纹 {fp})')
+        log('下一步: python qyyjt_fetch.py --open "企业名" --entry "目录/叶子"')
+        await close_browser(p, b)
+        return EXIT_OK
+
     entries = await collect_entries(pg)
     log(f'详情页入口 {len(entries)} 个')
 
@@ -367,6 +459,30 @@ async def do_fetch(args):
     if args.entry and '/' in args.entry:
         path = [s.strip() for s in args.entry.split('/') if s.strip()]
         log(f'=== 路径导航: {" / ".join(path)} ===')
+        # --open: scan 缓存校验(账号指纹 + 树指纹 + 路径存在性)
+        if args.open:
+            scan_file = Path(args.map) if args.map else DATA_DIR / f'scan_{matched}.json'
+            if scan_file.exists():
+                try:
+                    scan = json.load(open(scan_file, encoding='utf-8'))
+                    acct = await account_id(pg)
+                    if scan.get('accountId') and acct and scan['accountId'] != acct:
+                        log(f'!! 警告: scan 缓存为账号 {scan["accountId"][-11:]} 采集, '
+                            f'当前 {acct[-11:]}——菜单为账号自定义, 可能不一致')
+                    fp = await tree_fingerprint(pg)
+                    if scan.get('treeFingerprint') and scan['treeFingerprint'] != fp:
+                        log('!! 警告: 菜单结构与 scan 缓存不一致(改版/账号差异), 建议重扫 --scan')
+                    else:
+                        log('√ scan 缓存校验通过(账号+树结构一致)')
+                    if path not in [p['path'] for p in scan.get('paths', [])]:
+                        log(f'!! scan 清单中无此路径, 可用路径:')
+                        for p in scan.get('paths', [])[:20]:
+                            log(f'    {"D " if p["type"]=="dir" else "  "}{" / ".join(p["path"])}')
+                        log('  (仍尝试实时导航, 若失败说明该账号下确实无此入口)')
+                except Exception as ex:
+                    log(f'!! scan 文件读取失败: {ex}')
+            else:
+                log(f'!! 未找到 scan 缓存 {scan_file.name}; 建议先 --scan 扫描(仍尝试实时导航)')
         # 参数改写: --params 优先, 其次 --map 中该分支的 paramTemplate
         params = ParamRewriter.parse_params(args.params) if args.params else {}
         if args.map:
@@ -498,6 +614,10 @@ async def main():
     ap.add_argument('company', nargs='?', help='企业名')
     ap.add_argument('--entry', default=None, help='入口: 中文子串/英文别名(如 债券融资/bond/shareholder)')
     ap.add_argument('--list', action='store_true', help='列出该企业所有入口')
+    ap.add_argument('--scan', action='store_true',
+                    help='结构扫描: 逐目录展开生成主干-分支清单(约10-12次查询), 保存 data/scan_<企业>.json')
+    ap.add_argument('--open', action='store_true',
+                    help='(配 --entry 路径) scan 缓存校验后路径直达: 校验账号/树指纹/路径存在性')
     ap.add_argument('--all', action='store_true', help='抓取全部入口(耗配额)')
     ap.add_argument('--expand', action='store_true', help='匹配失败时全量展开树菜单(耗配额)')
     ap.add_argument('--url', default=None, help='直接抓取任意站内 URL')
@@ -515,10 +635,13 @@ async def main():
     args = ap.parse_args()
 
     if not args.company and not args.url:
-        log('用法: python qyyjt_fetch.py "企业名" --entry 入口  |  --list  |  --all  |  --url <URL>')
+        log('用法: python qyyjt_fetch.py "企业名" --entry 入口  |  --list  |  --all  |  --scan  |  --open --entry 路径  |  --url <URL>')
         return EXIT_OK
-    if args.company and not (args.entry or args.list or args.all):
-        log('!! 企业模式下需要 --entry / --list / --all 之一')
+    if args.open and not (args.entry and '/' in args.entry):
+        log('!! --open 需要配合路径格式的 --entry: --open --entry "财务数据/主要财务指标"')
+        return EXIT_OK
+    if args.company and not (args.entry or args.list or args.all or args.scan):
+        log('!! 企业模式下需要 --entry / --list / --all / --scan 之一')
         return EXIT_OK
 
     try:

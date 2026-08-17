@@ -744,6 +744,41 @@ async def collect_site_links(page):
     return uniq
 
 
+async def account_id(page):
+    """从 s_tk JWT 解码当前登录账号 userId(菜单为账号自定义, 用于 scan 缓存校验)"""
+    try:
+        return await page.evaluate("""(function() {
+            try {
+                var t = localStorage.getItem('s_tk');
+                if (!t) return '';
+                var p = t.split('.');
+                if (p.length < 2) return '';
+                var b64 = p[1].replace(/-/g, '+').replace(/_/g, '/');
+                return (JSON.parse(atob(b64)).userId || '');
+            } catch (e) { return ''; }
+        })()""")
+    except Exception:
+        return ''
+
+
+async def tree_fingerprint(page):
+    """当前菜单树的结构指纹(节点文本+层级+类型), 用于检测菜单是否变化。
+
+    注意: 需在详情页初始状态(未展开其他目录)下调用, 展开状态会影响结果。
+    """
+    import hashlib
+    try:
+        tree = await collect_tree(page)
+
+        def norm(ns):
+            return '|'.join(
+                f"{n['text']}:{n['level']}:{'D' if n.get('expandable') else 'L'}:"
+                f"{norm(n.get('children', []))}" for n in ns)
+        return hashlib.md5(norm(tree).encode('utf-8')).hexdigest()[:16]
+    except Exception:
+        return ''
+
+
 def search_url(keyword, tab='securities'):
     """搜索页 URL 模板: /s?tab=securities&k=关键词"""
     from urllib.parse import quote

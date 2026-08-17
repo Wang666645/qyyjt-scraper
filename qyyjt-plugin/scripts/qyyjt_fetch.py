@@ -184,7 +184,7 @@ async def fetch_entry(pg, entry, company_name, keep_full=False, wait_ms=5000,
     """
     cap = ApiCapture(pg, keep_full=keep_full)
     if not clicked:
-        ok = await click_entry(pg, entry, wait_ms=wait_ms)
+        ok = await click_entry(pg, entry, wait_ms=wait_ms, auto_wait=True)
         if not ok:
             return None
     await cap.drain()

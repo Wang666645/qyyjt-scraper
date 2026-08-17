@@ -18,7 +18,8 @@ import re
 from urllib.parse import urlparse, parse_qsl, urlencode
 
 from qyyjt_common import (collect_tree, locate_path, find_in_level, click_entry,
-                          click_tree_entry, check_quota, check_permission,
+                          click_tree_entry, content_signature, wait_content_change,
+                          wait_tree_grown, check_quota, check_permission,
                           collect_entries, PermissionDenied, QuotaExceeded)
 
 
@@ -60,12 +61,8 @@ class BranchNavigator:
         self.page = page
         self.log = log
 
-    async def wait_stable(self, timeout=8.0, quiet_ms=600):
-        """等待页面稳定: 网络空闲(有限超时) + 静默缓冲"""
-        try:
-            await self.page.wait_for_load_state('networkidle', timeout=timeout * 1000)
-        except Exception:
-            pass
+    async def wait_stable(self, timeout=6.0, quiet_ms=400):
+        """等待页面稳定: 内容变化后短暂缓冲(动态等待由 auto_wait 负责)"""
         await self.page.wait_for_timeout(quiet_ms)
 
     async def _signature(self):
@@ -106,12 +103,17 @@ class BranchNavigator:
                         return None
                 if e.get('kind') == 'tree' and not e.get('expandable'):
                     # 叶子中间级: 点击进入其页面(点击成功即返回, 无变化不代表失败)
-                    clicked = await click_tree_entry(self.page, e, wait_ms=2500)
+                    clicked = await click_tree_entry(self.page, e, wait_ms=8000,
+                                                     auto_wait=True)
                     await self.wait_stable()
                     ok = clicked
                     break
                 # expandable 中间级: 点击展开, 精确判定 = 展开后该目录出现子节点
-                clicked = await click_tree_entry(self.page, e, wait_ms=3000)
+                tree_before = await self.page.evaluate(
+                    '() => document.querySelectorAll(".ant-tree-treenode").length')
+                clicked = await click_tree_entry(self.page, e, wait_ms=3000,
+                                                 auto_wait=True)
+                await wait_tree_grown(self.page, tree_before, timeout=6000)
                 await self.wait_stable()
                 tree2 = await collect_tree(self.page)
                 root2 = locate_path_fuzzy(tree2, path[:i + 1]) if clicked else None
@@ -127,14 +129,17 @@ class BranchNavigator:
         tree = await collect_tree(self.page)
         e = locate_path_fuzzy(tree, path)
         if e is not None:
-            clicked = await click_tree_entry(self.page, e, wait_ms=wait_ms)
+            clicked = await click_tree_entry(self.page, e, wait_ms=wait_ms,
+                                             auto_wait=True)
+            await self.wait_stable()
             if clicked:
                 return e
             return None
         e = await self._find_page_entry(path[-1])
         if e is not None:
             clicked = await click_entry(self.page, {'kind': e['kind'], 'index': e['index']},
-                                        wait_ms=wait_ms)
+                                        wait_ms=wait_ms, auto_wait=True)
+            await self.wait_stable()
             if clicked:
                 return e
         return None

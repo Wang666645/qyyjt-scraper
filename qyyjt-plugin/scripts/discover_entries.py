@@ -105,7 +105,7 @@ async def do_discover(args):
             cap = ApiCapture(pg, keep_full=False)
             log(f'[{i}/{len(todo)}] 点击 ({e["kind"]}) {e["text"]} ...')
             try:
-                ok = await click_entry(pg, e)
+                ok = await click_entry(pg, e, auto_wait=True)
                 await cap.drain()
                 rec = dict(e)
                 rec['api'] = cap.summary()

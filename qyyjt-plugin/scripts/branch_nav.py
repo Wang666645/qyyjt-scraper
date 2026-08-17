@@ -98,7 +98,6 @@ class BranchNavigator:
                 continue  # 已展开, 无需点击
             ok = False
             for attempt in range(retries + 1):
-                before = await self._signature()
                 tree = await collect_tree(self.page)
                 e = locate_path_fuzzy(tree, path[:i + 1])
                 if e is None:
@@ -111,13 +110,15 @@ class BranchNavigator:
                     await self.wait_stable()
                     ok = clicked
                     break
-                clicked = await click_tree_entry(self.page, e, wait_ms=2500)
+                # expandable 中间级: 点击展开, 精确判定 = 展开后该目录出现子节点
+                clicked = await click_tree_entry(self.page, e, wait_ms=3000)
                 await self.wait_stable()
-                after = await self._signature()
-                if clicked and (after != before):
+                tree2 = await collect_tree(self.page)
+                root2 = locate_path_fuzzy(tree2, path[:i + 1]) if clicked else None
+                if clicked and root2 is not None and root2.get('children'):
                     ok = True
                     break
-                self.log(f'    展开[{path[i]}] 未生效, 重试 {attempt + 1}/{retries}')
+                self.log(f'    展开[{path[i]}] 未生效(无子节点出现), 重试 {attempt + 1}/{retries}')
             if not ok:
                 self.log(f'!! 展开[{path[i]}] 多次尝试无效果'
                          f'(站点端未响应: 可能该企业/账号下此目录不可展开, 或需人工确认)')

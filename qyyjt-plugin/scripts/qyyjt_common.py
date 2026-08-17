@@ -796,6 +796,38 @@ async def wait_tree_grown(page, before_count, timeout=8000):
         pass
 
 
+async def wait_tables_settle(page, timeout=8000, stable_rounds=3):
+    """等待页面表格数据稳定(表格数+行数连续稳定), 用于数据加载完成检测。
+
+    动态等待(内容变化即继续)可能因菜单/骨架屏变化提前返回, 此时表格数据
+    仍在异步加载; 提取前调用本函数确保数据就绪。返回时数据已稳定或超时。
+    """
+    import time
+    t0 = time.time()
+    prev = None
+    stable = 0
+    while time.time() - t0 < timeout:
+        try:
+            cur = await page.evaluate("""(function() {
+                var tables = 0, rows = 0;
+                document.querySelectorAll('table').forEach(function(t) {
+                    tables += 1;
+                    rows += t.querySelectorAll('tbody tr').length;
+                });
+                return tables + '|' + rows;
+            })()""")
+        except Exception:
+            return
+        if cur == prev:
+            stable += 1
+            if stable >= stable_rounds:
+                return
+        else:
+            stable = 0
+        prev = cur
+        await page.wait_for_timeout(300)
+
+
 async def account_id(page):
     """从 s_tk JWT 解码当前登录账号 userId(菜单为账号自定义, 用于 scan 缓存校验)"""
     try:

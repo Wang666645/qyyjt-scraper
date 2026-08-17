@@ -33,7 +33,7 @@ from qyyjt_common import (  # noqa: E402
     click_entry, click_path, close_browser, collect_entries, collect_tree,
     expand_tree_for_keyword, expand_tree_nodes, extract_blocks, extract_tables,
     flatten_tree, goto_overview, open_browser, page_text, pick_best,
-    search_company, stat_lines, tree_fingerprint,
+    search_company, stat_lines, tree_fingerprint, wait_tables_settle,
 )
 from branch_nav import (BranchNavigator, MatrixParser, ParamRewriter,
                         locate_path_fuzzy)  # noqa: E402
@@ -200,6 +200,8 @@ async def fetch_entry(pg, entry, company_name, keep_full=False, wait_ms=5000,
             'api': cap.summary(), 'tables': [], 'blocks': [], 'stats': [],
             'text_snapshot': await page_text(pg, 3000),
         }
+    # 数据稳定等待: 动态点击可能提前返回, 确保表格异步加载完成
+    await wait_tables_settle(pg)
     tables = await extract_tables(pg, paginate=max_pages > 0, max_pages=max_pages or 5)
     blocks = await extract_blocks(pg)
     stats = await stat_lines(pg, 20)
@@ -399,7 +401,10 @@ async def do_fetch(args):
                 else:
                     scan_paths.append({'path': p, 'type': 'leaf'})
 
-        log('=== 结构扫描(逐目录展开, 约 10-12 次查询/2-3 分钟) ===')
+        log('=== 结构扫描(逐目录展开, 约 10-12 次查询/1-2 分钟) ===')
+        # 指纹必须在初始状态(未展开)计算, 展开后与 --open 时的初始树不一致
+        fp = await tree_fingerprint(pg)
+        acct = await account_id(pg)
         collect_visible(await collect_tree(pg), [])
         tree0 = await collect_tree(pg)
         for child in tree0:
@@ -408,8 +413,6 @@ async def do_fetch(args):
             await scan_reset()
             await scan_dir([child['text']])
 
-        fp = await tree_fingerprint(pg)
-        acct = await account_id(pg)
         scan_data = {
             'schema': 'v4',
             'subjectType': 'company',

@@ -197,42 +197,155 @@ ENTRY_KINDS = [
 ]
 
 
-async def collect_entries(page):
-    """枚举当前页面所有可点入口 -> [{kind, text, index, expandable}] (去重, 不点击)
+# ═══════════════════════════════════════════════════════════
+# 入口发现 V2: 树形结构 (不点击, 不耗配额)
+# ═══════════════════════════════════════════════════════════
+async def collect_tree(page):
+    """读取左侧菜单树(ant-tree 扁平节点 + level class 重建嵌套)。
 
-    expandable=True 表示该入口是可展开的树父节点(如'企业融资'/'司法诉讼'),
-    点击只展开子树、不加载数据; 真正的数据入口是展开后出现的子节点/menu 项。
+    返回嵌套树: [{text, level, kind:'tree', expandable, sw, index, children}]
+    - expandable=True 表示可展开目录节点(点击只展开子树, 不加载数据)
+    - index 为该节点 .ant-tree-node-content-wrapper 的当前 DOM 序号
+    - 展开目录后 DOM 序号会变化, 使用前需重新 collect_tree
     """
-    entries = await page.evaluate("""(function() {
+    flat = await page.evaluate("""(function() {
         var out = [];
-        function push(kind, els, isExpandable) {
+        var wrappers = Array.prototype.slice.call(
+            document.querySelectorAll('.ant-tree-node-content-wrapper'));
+        document.querySelectorAll('.ant-tree-treenode').forEach(function(n) {
+            var title = n.querySelector('.ant-tree-title');
+            var sw = n.querySelector('.ant-tree-switcher');
+            var text = title ? (title.innerText || '').replace(/\\s+/g, ' ').trim() : '';
+            if (!text) return;
+            var cls = n.className || '';
+            var m = cls.match(/menu-(?:subTree|treeItem) menu-[^ ]*level-(\\d)/);
+            var swCls = sw ? sw.className : '';
+            var swState = swCls.indexOf('open') >= 0 ? 'open'
+                        : swCls.indexOf('close') >= 0 ? 'close' : 'leaf';
+            var w = n.querySelector('.ant-tree-node-content-wrapper');
+            out.push({text: text, level: m ? parseInt(m[1]) : 0,
+                      sw: swState, index: w ? wrappers.indexOf(w) : -1});
+        });
+        return out;
+    })()""")
+    return rebuild_tree(flat)
+
+
+def rebuild_tree(flat):
+    """深度优先扁平节点(带 level) -> 嵌套树。level 递增压栈, 递减弹栈。"""
+    roots, stack = [], []
+    for f in flat:
+        node = {'text': f['text'], 'level': f['level'], 'kind': 'tree',
+                'expandable': f['sw'] in ('open', 'close'),
+                'sw': f['sw'], 'index': f['index'], 'children': []}
+        while stack and stack[-1][1] >= f['level']:
+            stack.pop()
+        if stack:
+            stack[-1][0]['children'].append(node)
+        else:
+            roots.append(node)
+        if node['expandable']:
+            stack.append((node, f['level']))
+    return roots
+
+
+def flatten_tree(tree, path=None):
+    """嵌套树 -> 扁平入口列表 [{kind, text, path, index, expandable}] (深度优先)"""
+    path = path or []
+    out = []
+    for n in tree:
+        p = path + [n['text']]
+        out.append({'kind': n['kind'], 'text': n['text'], 'path': p,
+                    'index': n['index'], 'expandable': n.get('expandable', False)})
+        if n.get('children'):
+            out.extend(flatten_tree(n['children'], p))
+    return out
+
+
+def locate_path(tree, path):
+    """按文本路径逐级定位树节点: locate_path(tree, ['财务数据','资产负债表'])"""
+    level = tree
+    for seg in path:
+        e = find_in_level(level, seg)
+        if e is None:
+            return None
+        level = e.get('children', [])
+    return e
+
+
+def find_in_level(nodes, seg):
+    """当前层匹配: 精确 -> 子串 -> 数字后缀归一化('司法案件 14' vs '司法案件')"""
+    seg = (seg or '').strip()
+    if not seg:
+        return None
+    for n in nodes:
+        if n['text'] == seg:
+            return n
+    for n in nodes:
+        if seg in n['text'] or n['text'] in seg:
+            return n
+    for n in nodes:
+        t = re.sub(r'\s*\d+$', '', n['text'])
+        if t == seg or (seg in t):
+            return n
+    return None
+
+
+async def click_path(page, path, wait_ms=5000):
+    """按路径逐级导航并点击最后一级: click_path(page, ['财务数据','资产负债表'])
+
+    中间级: 若可展开则点击展开(等 2.5s)后重新读树; 最后一级: 点击进入
+    (expandable 目录则只展开不加载数据)。返回命中的入口 dict 或 None。
+    """
+    for i in range(len(path) - 1):
+        tree = await collect_tree(page)
+        e = locate_path(tree, path[:i + 1])
+        if e is None:
+            return None
+        if e.get('expandable'):
+            ok = await click_entry(page, {'kind': 'tree', 'index': e['index']}, wait_ms=2500)
+            if not ok:
+                return None
+    tree = await collect_tree(page)
+    e = locate_path(tree, path)
+    if e is None:
+        return None
+    if e.get('expandable'):
+        await click_entry(page, {'kind': 'tree', 'index': e['index']}, wait_ms=2500)
+    else:
+        ok = await click_entry(page, {'kind': 'tree', 'index': e['index']}, wait_ms=wait_ms)
+        if not ok:
+            return None
+    return e
+
+
+async def collect_entries(page):
+    """枚举当前页面所有可点入口 -> [{kind, text, index, expandable, path}] (去重, 不点击)
+
+    tree 菜单按嵌套树扁平化(带完整 path); 锚点/tab 作为页面级附加入口。
+    expandable=True 表示可展开的树目录节点(如'财务数据'/'司法诉讼'),
+    点击只展开子树、不加载数据。
+    """
+    entries = []
+    tree = await collect_tree(page)
+    entries.extend(flatten_tree(tree))
+    extras = await page.evaluate("""(function() {
+        var out = [];
+        function push(kind, els) {
             els.forEach(function(el, i) {
                 var t = (el.innerText || '').replace(/\\s+/g, ' ').trim();
                 if (!t || t.length > 40) return;
-                out.push({kind: kind, text: t, index: i,
-                          expandable: isExpandable ? isExpandable(el) : false});
+                out.push({kind: kind, text: t, index: i});
             });
         }
-        function treeExpandable(el) {
-            var n = el.closest('.ant-tree-treenode');
-            if (!n) return false;
-            var c = n.className || '';
-            return c.indexOf('switcher-close') >= 0 || c.indexOf('switcher-open') >= 0;
-        }
-        push('menu', document.querySelectorAll('.menu-item-wrapper'), null);
-        push('anchor', document.querySelectorAll('.ant-anchor-link-title'), null);
-        push('tree', document.querySelectorAll('.ant-tree-node-content-wrapper'), treeExpandable);
-        push('tab', document.querySelectorAll('.ant-tabs-tab'), null);
+        push('anchor', document.querySelectorAll('.ant-anchor-link-title'));
+        push('tab', document.querySelectorAll('.ant-tabs-tab'));
         return out;
     })()""")
-    seen, uniq = set(), []
-    for e in entries:
-        k = (e['kind'], e['text'])
-        if k in seen:
-            continue
-        seen.add(k)
-        uniq.append(e)
-    return uniq
+    for x in extras:
+        entries.append({'kind': x['kind'], 'text': x['text'], 'path': [x['text']],
+                        'index': x['index'], 'expandable': False})
+    return entries
 
 
 async def expand_tree_nodes(page, depth=4):
@@ -309,7 +422,7 @@ async def click_entry(page, entry, wait_ms=5000):
     })""", {'kind': entry['kind'], 'index': entry['index']})
     if ok:
         await page.wait_for_timeout(wait_ms)
-        await check_quota(page, f"点击[{entry['text']}]")
+        await check_quota(page, f"点击[{entry.get('text', '')}]")
     return ok
 
 

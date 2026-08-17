@@ -31,8 +31,9 @@ $S  = 'qyyjt-plugin\scripts'
 # 1) 列出某企业全部可用入口(不耗配额, 先看有什么可抓)
 & $PY $S\qyyjt_fetch.py "企业名" --list
 
-# 2) 抓指定入口(自动匹配: 中文子串/英文别名, 自动展开树/级联父入口)
+# 2) 抓指定入口(自动匹配: 中文子串/英文别名/路径导航, 自动展开树/级联父入口)
 & $PY $S\qyyjt_fetch.py "企业名" --entry "债券融资"
+& $PY $S\qyyjt_fetch.py "企业名" --entry "财务数据/资产负债表"   # 路径导航(父/子)
 & $PY $S\qyyjt_fetch.py "企业名" --entry 股东
 & $PY $S\qyyjt_fetch.py "企业名" --entry shareholder
 & $PY $S\qyyjt_fetch.py "企业名" --entry "债券融资" --out 结果.xlsx

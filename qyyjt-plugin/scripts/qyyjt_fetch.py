@@ -30,9 +30,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 from qyyjt_common import (  # noqa: E402
     ApiCapture, EXIT_LOGIN, EXIT_NOTFOUND, EXIT_OK, EXIT_PERM, EXIT_QUOTA,
     PermissionDenied, QuotaExceeded, NotLoggedIn, check_permission,
-    click_entry, close_browser, collect_entries, expand_tree_for_keyword,
-    expand_tree_nodes, extract_blocks, extract_tables, goto_overview,
-    open_browser, page_text, pick_best, search_company, stat_lines,
+    click_entry, click_path, close_browser, collect_entries, collect_tree,
+    expand_tree_for_keyword, expand_tree_nodes, extract_blocks, extract_tables,
+    goto_overview, open_browser, page_text, pick_best, search_company,
+    stat_lines,
 )
 
 DATA_DIR = Path(__file__).parent.parent / 'data'
@@ -53,6 +54,18 @@ ALIASES = {
 
 def log(msg):
     print(msg, flush=True)
+
+
+def print_tree(nodes, indent=0):
+    """树形打印入口菜单"""
+    for n in nodes:
+        if n.get('expandable'):
+            icon = '▾' if n.get('sw') == 'open' else '▸'
+        else:
+            icon = '·'
+        log('  ' * indent + f'{icon} {n["text"]}')
+        if n.get('children'):
+            print_tree(n['children'], indent + 1)
 
 
 def match_entry(entries, query, fuzzy=True, prefer_leaf=True):
@@ -153,23 +166,26 @@ def to_excel(out_path, results):
 
 
 async def fetch_entry(pg, entry, company_name, keep_full=False, wait_ms=5000,
-                      max_pages=0):
-    """点击入口并抓取: API 摘要 + 表格(可翻页) + 内容块 + 统计 + 正文快照。
+                      max_pages=0, clicked=False):
+    """抓取入口数据: API 摘要 + 表格(可翻页) + 内容块 + 统计 + 正文快照。
 
+    clicked=True 时跳过点击(调用方已用 click_path 导航到位)。
     权限处理: 点击后若页面出现"权限不足/成为正式用户"等提示, 返回
     permission_denied=True 的记录(不把残留表格当作正常数据)。
     """
     cap = ApiCapture(pg, keep_full=keep_full)
-    ok = await click_entry(pg, entry, wait_ms=wait_ms)
+    if not clicked:
+        ok = await click_entry(pg, entry, wait_ms=wait_ms)
+        if not ok:
+            return None
     await cap.drain()
-    if not ok:
-        return None
     # 权限识别: 必须在提取数据之前, 避免残留表格被当成结果
     try:
-        await check_permission(pg, f"入口[{entry['text']}]")
+        await check_permission(pg, f"入口[{entry.get('text', '')}]")
     except PermissionDenied as ex:
         return {
-            'company': company_name, 'entry': entry['text'], 'kind': entry['kind'],
+            'company': company_name, 'entry': entry.get('text', ''),
+            'kind': entry.get('kind', ''),
             'time': datetime.now().isoformat(timespec='seconds'),
             'permission_denied': True, 'permission_msg': str(ex),
             'api': cap.summary(), 'tables': [], 'blocks': [], 'stats': [],
@@ -180,8 +196,9 @@ async def fetch_entry(pg, entry, company_name, keep_full=False, wait_ms=5000,
     stats = await stat_lines(pg, 20)
     rec = {
         'company': company_name,
-        'entry': entry['text'],
-        'kind': entry['kind'],
+        'entry': entry.get('text', ''),
+        'kind': entry.get('kind', ''),
+        'path': entry.get('path'),
         'time': datetime.now().isoformat(timespec='seconds'),
         'api': cap.summary(),
         'tables': tables,
@@ -317,17 +334,48 @@ async def do_fetch(args):
     entries = await collect_entries(pg)
     log(f'详情页入口 {len(entries)} 个')
 
-    # ── 列出入口 ──
+    # ── 列出入口(树形展示) ──
     if args.list:
-        for i, e in enumerate(entries):
-            log(f'  [{i}] ({e["kind"]:6s}) {e["text"]}')
+        tree = await collect_tree(pg)
+        log('=== 左侧菜单树 ===')
+        print_tree(tree)
+        extras = [e for e in entries if e['kind'] in ('anchor', 'tab')]
+        if extras:
+            log('=== 页面级入口(锚点/Tab, 随当前页面变化) ===')
+            for e in extras:
+                log(f'  [{e["kind"]}] {e["text"]}')
         log('\n用法示例:')
         log(f'  python qyyjt_fetch.py "{args.company}" --entry 债券融资')
+        log(f'  python qyyjt_fetch.py "{args.company}" --entry "财务数据/资产负债表"')
         await close_browser(p, b)
         return EXIT_OK
 
+    # ── 路径导航模式: "财务数据/资产负债表" ──
+    if args.entry and '/' in args.entry:
+        path = [s.strip() for s in args.entry.split('/') if s.strip()]
+        log(f'=== 路径导航: {" / ".join(path)} ===')
+        e = await click_path(pg, path, wait_ms=args.wait)
+        if e is None:
+            log(f'!! 路径定位失败: {args.entry}; 可用树入口见 --list')
+            await close_browser(p, b)
+            return EXIT_NOTFOUND
+        log(f'=== 抓取入口 [{e["kind"]}] {path[-1]} (路径: {" / ".join(path)}) ===')
+        rec = await fetch_entry(pg, {'kind': 'tree', 'text': path[-1], 'path': path},
+                                matched, keep_full=args.full_api,
+                                max_pages=args.max_pages, clicked=True)
+        if rec is None:
+            log('!! 抓取失败')
+            await close_browser(p, b)
+            return EXIT_ERR
+        summarize(rec)
+        results = [rec]
+        if rec.get('permission_denied'):
+            await close_browser(p, b)
+            finish(args, results)
+            return EXIT_PERM
+
     # ── 抓指定入口 ──
-    if args.entry:
+    elif args.entry:
         # 统一走级联: 直接匹配 -> 可展开树节点下沉 -> 父入口级联
         log('定位入口: 直接匹配/树节点下沉/父入口级联...')
         try:

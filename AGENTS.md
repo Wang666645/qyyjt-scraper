@@ -20,8 +20,9 @@ $S  = 'qyyjt-plugin\scripts'
 # 查看某企业全部可抓入口（先跑这个，不耗配额）
 & $PY $S\qyyjt_fetch.py "企业名" --list
 
-# 抓指定维度（中文/别名均可，自动展开树菜单并级联查找）
+# 抓指定维度（中文/别名/路径均可，自动展开树菜单并级联查找）
 & $PY $S\qyyjt_fetch.py "企业名" --entry "债券融资"
+& $PY $S\qyyjt_fetch.py "企业名" --entry "财务数据/资产负债表"   # 路径导航(父/子)
 & $PY $S\qyyjt_fetch.py "企业名" --entry 股东 --out 股东.xlsx
 
 # 任意站内 URL

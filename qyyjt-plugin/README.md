@@ -61,8 +61,9 @@ $S  = 'qyyjt-plugin\scripts'
 # 列入口(不耗配额)
 & $PY $S\qyyjt_fetch.py "企业名" --list
 
-# 抓指定维度(自动匹配/展开树/级联)
+# 抓指定维度(自动匹配/展开树/级联/路径导航)
 & $PY $S\qyyjt_fetch.py "企业名" --entry "债券融资"
+& $PY $S\qyyjt_fetch.py "企业名" --entry "财务数据/资产负债表"   # 路径导航: 展开财务数据→资产负债表
 & $PY $S\qyyjt_fetch.py "企业名" --entry shareholder --out 股东.xlsx
 & $PY $S\qyyjt_fetch.py "企业名" --entry "债券融资" --out r.json --full-api
 
@@ -82,7 +83,7 @@ $S  = 'qyyjt-plugin\scripts'
 
 | 参数 | 说明 |
 |---|---|
-| `--entry 文本` | 入口匹配：精确→子串→别名→**树节点下沉**（可展开树父节点自动展开后继续找数据入口）→级联父入口→模糊 |
+| `--entry 文本` | 入口匹配：**路径**（`父/子`，如 `财务数据/资产负债表`）→精确→子串→别名→**树节点下沉**（可展开树父节点自动展开后继续找数据入口）→级联父入口→模糊 |
 | `--out 文件` | `.json` 结构化 / `.xlsx` 多 Sheet；缺省仅打印摘要 |
 | `--full-api` | JSON 输出附带各 API 端点完整响应 |
 | `--all` | 遍历全部入口逐个抓取（注意配额） |

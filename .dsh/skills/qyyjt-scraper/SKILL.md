@@ -38,6 +38,8 @@ $S  = 'qyyjt-plugin\scripts'
 & $PY $S\qyyjt_fetch.py "企业名" --entry shareholder
 & $PY $S\qyyjt_fetch.py "企业名" --entry "债券融资" --out 结果.xlsx
 & $PY $S\qyyjt_fetch.py "企业名" --entry "债券融资" --out 结果.json --full-api
+& $PY $S\qyyjt_fetch.py "企业名" --entry "财务数据/资产负债表" --params "报告期=2025年报" --out 报表.xlsx
+& $PY $S\qyyjt_fetch.py "企业名" --entry "财务数据/资产负债表" --map data\site_map.json
 
 # 3) 抓全部入口(耗配额, 谨慎; 中途配额用尽会自动保存已抓部分)
 & $PY $S\qyyjt_fetch.py "企业名" --all --out 全部.xlsx

@@ -10,6 +10,7 @@
   python discover_entries.py "企业名" --list            # 只枚举入口(不点击, 不耗配额)
   python discover_entries.py "企业名" --probe [N]       # 枚举并逐个点击前 N 个入口, 记录 API+表格
   python discover_entries.py "企业名" --probe --expand  # 先递归展开'企业融资'等树菜单再探测
+  python discover_entries.py "企业名" --probe-recursive [N]  # 逐目录递归采集全部分支 -> site_map v2 (耗配额, N=目录数上限)
   python discover_entries.py --site                     # 站点级入口发现(首页导航/链接)
   python discover_entries.py "企业名" --out 文件.json    # 指定输出(默认 data/entries_map.json)
 
@@ -26,10 +27,11 @@ sys.path.insert(0, str(Path(__file__).parent))
 from qyyjt_common import (  # noqa: E402
     ApiCapture, EXIT_LOGIN, EXIT_NOTFOUND, EXIT_OK, EXIT_QUOTA,
     PermissionDenied, QuotaExceeded, NotLoggedIn, check_permission,
-    check_quota, click_entry, close_browser, collect_entries,
+    check_quota, click_entry, close_browser, collect_entries, collect_tree,
     expand_tree_nodes, extract_blocks, extract_tables, goto_overview,
-    open_browser, pick_best, search_company, stat_lines,
+    locate_path, open_browser, pick_best, search_company, stat_lines,
 )
+from branch_nav import BranchNavigator  # noqa: E402
 
 DATA_DIR = Path(__file__).parent.parent / 'data'
 
@@ -67,7 +69,8 @@ async def do_discover(args):
     entries = await collect_entries(pg)
     if args.expand:
         log('展开树菜单...')
-        entries = await expand_tree_nodes(pg)
+        await expand_tree_nodes(pg)
+        entries = await collect_entries(pg)
 
     log(f'\n发现 {len(entries)} 个入口:')
     for i, e in enumerate(entries):
@@ -138,6 +141,84 @@ async def do_discover(args):
             await close_browser(p, b)
             return status
 
+    # ---- 递归探测: 逐目录采集全部分支 (P3, 手风琴菜单适配) ----
+    if args.probe_recursive:
+        log('\n=== 逐目录递归采集分支(手风琴菜单: 每次只展开一个目录) ===')
+        nav = BranchNavigator(pg, log)
+        branches, seen = [], set()
+        dir_limit = int(args.probe_recursive) if str(args.probe_recursive).isdigit() else None
+        dir_count = [0]
+        status = EXIT_OK
+
+        async def probe_dir(path, depth):
+            if depth > 2 or status != EXIT_OK:
+                return
+            tree = await collect_tree(pg)
+            root = locate_path(tree, path)
+            if root is None:
+                return
+            if root.get('sw') == 'open':
+                pass  # 已展开(如初始的'常用模块'): 直接采集, 不耗配额
+            else:
+                if dir_limit and dir_count[0] >= dir_limit:
+                    return
+                dir_count[0] += 1
+                e = await nav.navigate(path, wait_ms=2500)
+                if e is None:
+                    log(f'  导航失败: {" / ".join(path)}')
+                    return
+                tree = await collect_tree(pg)
+                root = locate_path(tree, path)
+                if root is None:
+                    return
+            for child in root.get('children', []):
+                p = path + [child['text']]
+                key = ' / '.join(p)
+                if key in seen:
+                    continue
+                seen.add(key)
+                if child.get('expandable'):
+                    branches.append({'path': p, 'type': 'dir'})
+                    await probe_dir(p, depth + 1)
+                else:
+                    branches.append({'path': p, 'type': 'leaf'})
+
+        try:
+            tree0 = await collect_tree(pg)
+            for child in tree0:
+                if status != EXIT_OK:
+                    break
+                key = child['text']
+                if key in seen:
+                    continue
+                seen.add(key)
+                if child.get('expandable'):
+                    branches.append({'path': [child['text']], 'type': 'dir'})
+                    await probe_dir([child['text']], 1)
+                else:
+                    branches.append({'path': [child['text']], 'type': 'leaf'})
+        except QuotaExceeded as ex:
+            log(f'!!! 配额停止: {ex}')
+            status = EXIT_QUOTA
+
+        leaves = [b for b in branches if b['type'] == 'leaf']
+        dirs = [b for b in branches if b['type'] == 'dir']
+        log(f'采集完成: 分支 {len(branches)} 个 = 目录 {len(dirs)} + 叶子 {len(leaves)}')
+        map_data = {
+            'schema': 'v2',
+            'subjectType': 'company',
+            'subjectName': company[1] if company else '',
+            'probedAt': datetime.now().isoformat(timespec='seconds'),
+            'branches': branches,
+        }
+        out = Path(args.out) if args.out else DATA_DIR / 'site_map.json'
+        out.parent.mkdir(parents=True, exist_ok=True)
+        with open(out, 'w', encoding='utf-8') as f:
+            json.dump(map_data, f, ensure_ascii=False, indent=1)
+        log(f'已写入: {out}')
+        await close_browser(p, b)
+        return status
+
     out = Path(args.out) if args.out else DATA_DIR / 'entries_map.json'
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, 'w', encoding='utf-8') as f:
@@ -152,6 +233,8 @@ async def main():
     ap.add_argument('company', nargs='?', help='企业名(缺省配合 --site 用)')
     ap.add_argument('--list', action='store_true', help='只枚举入口, 不点击(不耗配额)')
     ap.add_argument('--probe', nargs='?', const='all', help='逐个点击探测并记录 API/表格(可给数字 N)')
+    ap.add_argument('--probe-recursive', nargs='?', const='all',
+                    help='逐目录递归采集全部分支 -> site_map v2(耗配额, 可给目录数上限)')
     ap.add_argument('--expand', action='store_true', help='先递归展开树菜单(可能耗配额)')
     ap.add_argument('--site', action='store_true', help='站点级入口发现(首页导航链接)')
     ap.add_argument('--out', default=None, help='输出 json 路径(默认 data/entries_map.json)')

@@ -348,26 +348,34 @@ async def collect_entries(page):
     return entries
 
 
-async def expand_tree_nodes(page, depth=4):
-    """全量展开树菜单(点击所有未展开子树的节点标题)。可能触发较多数据加载, 注意配额。"""
+async def expand_tree_nodes(page, depth=30):
+    """全量展开树菜单: 每轮批量点击所有未展开子树, 直到无可展开节点。
+
+    修复说明: 旧版每轮只展开 1 个节点且 depth=4, 10 个目录只能展开 4-5 个,
+    未展开目录的子入口不在 DOM 中无法枚举。新版每轮点击全部 close 节点,
+    循环至无 close 为止(depth 为轮次上限)。注意: 展开会触发子菜单数据加载,
+    可能消耗查询配额, 命中即抛 QuotaExceeded。
+    """
     for _ in range(depth):
         clicked = await page.evaluate("""(function() {
+            var clicked = false;
             var nodes = document.querySelectorAll('.ant-tree-node-content-wrapper');
             for (var i = 0; i < nodes.length; i++) {
                 var treenode = nodes[i].closest('.ant-tree-treenode');
                 if (!treenode) continue;
-                if (treenode.className.indexOf('switcher-close') >= 0) {
+                var cls = treenode.className || '';
+                if (cls.indexOf('switcher-close') >= 0) {
                     nodes[i].click();
-                    return true;
+                    clicked = true;
                 }
             }
-            return false;
+            return clicked;
         })()""")
         if not clicked:
             break
         await page.wait_for_timeout(2500)
         await check_quota(page, '展开树节点')
-    return await collect_entries(page)
+    return await collect_tree(page)
 
 
 async def expand_tree_for_keyword(page, query, depth=3):

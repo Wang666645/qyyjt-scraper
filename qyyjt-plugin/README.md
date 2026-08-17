@@ -73,9 +73,13 @@ $S  = 'qyyjt-plugin\scripts'
 # 任意 URL(搜索页/榜单页等)
 & $PY $S\qyyjt_fetch.py --url "https://www.qyyjt.cn/s?tab=securities&k=重庆"
 
-# 入口编码发现
+# 路径导航 + 筛选参数(报表等)
+& $PY $S\qyyjt_fetch.py "企业名" --entry "财务数据/资产负债表" --params "报告期=2025年报&合并=合并期末" --out 报表.xlsx
+& $PY $S\qyyjt_fetch.py "企业名" --entry "财务数据/资产负债表" --map data\site_map.json
+
+# 入口编码发现 / 分支地图(逐目录递归采集, 耗配额)
 & $PY $S\discover_entries.py "企业名" --list
-& $PY $S\discover_entries.py "企业名" --probe 10 --out data\entries_map.json
+& $PY $S\discover_entries.py "企业名" --probe-recursive 5 --out data\site_map.json
 & $PY $S\discover_entries.py --site
 ```
 
@@ -89,6 +93,8 @@ $S  = 'qyyjt-plugin\scripts'
 | `--all` | 遍历全部入口逐个抓取（注意配额） |
 | `--expand` | 匹配失败时全量展开树菜单（耗配额） |
 | `--max-pages N` | 表格翻页上限（默认 0=不翻页；N=每表最多 N 页；**翻页耗查询配额**） |
+| `--params 筛选` | 路径模式筛选参数：`报告期=2025年报&合并=合并期末&单位=万元`（中文名自动映射 API 参数） |
+| `--map 文件` | 分支地图 site_map.json v2；命中分支自动复用其参数模板 |
 | `--url URL` | 直接抓任意站内页面 |
 | `--probe N` | (discover) 探测前 N 个入口的 API+表格结构 |
 | `--headed` | 有头模式（调试） |
@@ -128,6 +134,13 @@ qyyjt-scraper/
 - **不会**把页面残留的其它表格当作正常数据返回（识别先于数据提取）
 - `--all` 批量时逐个标记并继续，最后汇总"其中 N 个入口因权限不足未取到数据"
 - 处理方式：升级正式会员后重跑，或在结果中跳过该维度
+
+## 分支导航与报表矩阵（P1-P3）
+
+- **BranchNavigator**：路径导航自动重试——每步点击后比对页面内容签名，无变化视为未生效并重试；网络静默等待
+- **ParamRewriter**：`--params` 拦截 API 改写查询参数（页面上下文自动带签名头）；参数名可用 `--full-api` 输出的 API query 或地图 paramTemplate
+- **MatrixParser**：报表多期矩阵（科目/缩进/加粗/各期数值）结构化提取，Excel 输出含标题、单位、千分位格式
+- **分支地图**（`--probe-recursive`）：逐目录展开采集全部分支（适配手风琴菜单），生成 site_map.json v2；`--map` 复用免重复探测
 
 ## 数据形态适配
 

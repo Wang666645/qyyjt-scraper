@@ -32,9 +32,10 @@ from qyyjt_common import (  # noqa: E402
     PermissionDenied, QuotaExceeded, NotLoggedIn, check_permission,
     click_entry, click_path, close_browser, collect_entries, collect_tree,
     expand_tree_for_keyword, expand_tree_nodes, extract_blocks, extract_tables,
-    goto_overview, open_browser, page_text, pick_best, search_company,
-    stat_lines,
+    flatten_tree, goto_overview, open_browser, page_text, pick_best,
+    search_company, stat_lines,
 )
+from branch_nav import BranchNavigator, MatrixParser, ParamRewriter  # noqa: E402
 
 DATA_DIR = Path(__file__).parent.parent / 'data'
 ALIASES = {
@@ -145,16 +146,23 @@ def to_excel(out_path, results):
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = '概览'
-    ws.append(['公司', '入口', 'API端点', '表格数', '总行数', '抓取时间'])
+    ws.append(['公司', '入口', 'API端点', '表格数', '总行数', '矩阵数', '抓取时间'])
     for r in results:
         n_tables = len(r.get('tables', []))
         n_rows = sum(t['rowCount'] for t in r.get('tables', []))
+        n_matrix = len(r.get('matrix', []))
         api = '; '.join(a['code'] for a in r.get('api', [])[:3])
         ws.append([r.get('company', ''), r.get('entry', ''), api, n_tables, n_rows,
-                   r.get('time', '')])
+                   n_matrix, r.get('time', '')])
     for i, r in enumerate(results, start=2):
+        # 报表矩阵优先(结构化更好)
+        for mi, m in enumerate(r.get('matrix', [])):
+            title = f"{r.get('entry', '报表')}_{mi + 1}"[:31]
+            MatrixParser.to_excel_sheet(wb, title, m,
+                                        meta={'title': r.get('entry', ''),
+                                              'unit': '见页面'})
         for t in r.get('tables', []):
-            name = f"{r.get('entry', 'entry')}_{t.get('table', i)}"[:31] or 'sheet'
+            name = f"{r.get('entry', 'entry')}_表{t.get('table', i)}"[:31] or 'sheet'
             s = wb.create_sheet(title=name)
             s.append(t['headers'])
             for row in t['rows']:
@@ -194,6 +202,10 @@ async def fetch_entry(pg, entry, company_name, keep_full=False, wait_ms=5000,
     tables = await extract_tables(pg, paginate=max_pages > 0, max_pages=max_pages or 5)
     blocks = await extract_blocks(pg)
     stats = await stat_lines(pg, 20)
+    try:
+        matrix = await MatrixParser.extract(pg)
+    except Exception:
+        matrix = []
     rec = {
         'company': company_name,
         'entry': entry.get('text', ''),
@@ -202,6 +214,7 @@ async def fetch_entry(pg, entry, company_name, keep_full=False, wait_ms=5000,
         'time': datetime.now().isoformat(timespec='seconds'),
         'api': cap.summary(),
         'tables': tables,
+        'matrix': matrix,
         'blocks': blocks,
         'stats': stats,
         'text_snapshot': await page_text(pg, 4000),
@@ -354,11 +367,27 @@ async def do_fetch(args):
     if args.entry and '/' in args.entry:
         path = [s.strip() for s in args.entry.split('/') if s.strip()]
         log(f'=== 路径导航: {" / ".join(path)} ===')
-        e = await click_path(pg, path, wait_ms=args.wait)
+        # 参数改写: --params 优先, 其次 --map 中该分支的 paramTemplate
+        params = ParamRewriter.parse_params(args.params) if args.params else {}
+        if args.map:
+            try:
+                map_data = json.load(open(args.map, encoding='utf-8'))
+                if map_data.get('subjectName') == matched:
+                    for b in map_data.get('branches', []):
+                        if b.get('path') == path and b.get('paramTemplate'):
+                            params = {**b['paramTemplate'], **params}
+                            log(f'    地图命中参数模板: {params}')
+            except Exception as ex:
+                log(f'!! 地图加载失败: {ex}')
+        rw = ParamRewriter(pg, params) if params else None
+        nav = BranchNavigator(pg, log)
+        e = await nav.navigate(path, wait_ms=args.wait)
         if e is None:
             log(f'!! 路径定位失败: {args.entry}; 可用树入口见 --list')
             await close_browser(p, b)
             return EXIT_NOTFOUND
+        if rw and rw.rewritten:
+            log(f'    参数改写 {len(rw.rewritten)} 次: {rw.rewritten[-1]["from"][:60]} -> {rw.rewritten[-1]["to"][:60]}')
         log(f'=== 抓取入口 [{e["kind"]}] {path[-1]} (路径: {" / ".join(path)}) ===')
         rec = await fetch_entry(pg, {'kind': 'tree', 'text': path[-1], 'path': path},
                                 matched, keep_full=args.full_api,
@@ -387,7 +416,8 @@ async def do_fetch(args):
         if e is None and args.expand:
             log('--expand: 全量展开树菜单...')
             try:
-                entries = await expand_tree_nodes(pg)
+                tree = await expand_tree_nodes(pg)
+                entries = flatten_tree(tree)
                 e = match_entry(entries, args.entry, fuzzy=False)
             except QuotaExceeded as ex:
                 log(f'!! 展开树触发配额: {ex}')
@@ -476,6 +506,10 @@ async def main():
     ap.add_argument('--wait', type=int, default=5000, help='点击后等待毫秒数(默认5000)')
     ap.add_argument('--max-pages', type=int, default=0,
                     help='表格翻页上限(默认0=不翻页; 如 5=每表最多翻到5页; 翻页耗查询配额)')
+    ap.add_argument('--params', default=None,
+                    help='筛选参数(路径模式): 报告期=2025年报&合并=合并期末&单位=万元')
+    ap.add_argument('--map', default=None,
+                    help='分支地图 site_map.json(v2), 命中分支自动复用其参数模板')
     ap.add_argument('--profile', default=None, help='浏览器 profile 目录')
     ap.add_argument('--headed', action='store_true', help='有头模式(调试)')
     args = ap.parse_args()

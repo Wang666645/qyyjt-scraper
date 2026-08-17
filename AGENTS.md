@@ -30,6 +30,10 @@ $S  = 'qyyjt-plugin\scripts'
 
 # 入口发现（探测各入口触发的 API 与表格结构）
 & $PY $S\discover_entries.py "企业名" --probe 5
+
+# 路径导航 + 筛选参数（报表类: 分支导航自动重试, 参数改写, 矩阵Excel）
+& $PY $S\qyyjt_fetch.py "企业名" --entry "财务数据/资产负债表" --params "报告期=2025年报" --out 报表.xlsx
+& $PY $S\discover_entries.py "企业名" --probe-recursive 5 --out data\site_map.json
 ```
 
 ## 关键规则

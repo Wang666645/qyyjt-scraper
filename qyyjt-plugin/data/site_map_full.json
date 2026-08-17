@@ -1,8 +1,8 @@
 {
- "schema": "v2",
+ "schema": "v3",
  "subjectType": "company",
  "subjectName": "重庆三峡发展集团有限公司",
- "probedAt": "2026-08-17T21:50:32",
+ "probedAt": "2026-08-17T22:08:28",
  "branches": [
   {
    "path": [
@@ -32,7 +32,16 @@
      "rowCount": 2
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -41,6 +50,17 @@
    ],
    "type": "leaf",
    "api": [
+    {
+     "code": "/finchinaAPP/checkUserRightLimit.action?checkUserRightLimit.action",
+     "url": "https://www.qyyjt.cn/finchinaAPP/checkUserRightLimit.action?markCode=1265",
+     "count": 1,
+     "keys": [
+      "returncode",
+      "info",
+      "data"
+     ],
+     "rowCount": 0
+    },
     {
      "code": "/finchinaAPP/v1/finchina-discovery/news-ai/history-list?history-list",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-discovery/news-ai/history-list?code=BB276523229AE728755938AFFAC18A02&name=%E9%87%8D%E5%BA%86%E4%B8%89%E5%B3%A1%E5%8F%91%E5%B1%95%E9%9B%86%E5%9B%A2%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8&skip=0&pageSize=50&type=company",
@@ -52,25 +72,14 @@
       "tip"
      ],
      "rowCount": 0
-    },
-    {
-     "code": "/finchinaAPP/checkUserRightLimit.action?checkUserRightLimit.action",
-     "url": "https://www.qyyjt.cn/finchinaAPP/checkUserRightLimit.action?markCode=1265",
-     "count": 1,
-     "keys": [
-      "returncode",
-      "info",
-      "data"
-     ],
-     "rowCount": 0
     }
    ],
    "paramTemplate": {
+    "markCode": "1265",
     "name": "重庆三峡发展集团有限公司",
     "skip": "0",
     "pageSize": "50",
-    "type": "company",
-    "markCode": "1265"
+    "type": "company"
    },
    "tables": [
     {
@@ -86,7 +95,16 @@
      "rowCount": 2
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -160,7 +178,26 @@
      "rowCount": 100
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -191,19 +228,6 @@
       "tip"
      ],
      "rowCount": 3
-    },
-    {
-     "code": "/finchinaAPP/newsPlate/getRiskCompanyTrendDetail.action?getRiskCompanyTrendDetail.action",
-     "url": "https://www.qyyjt.cn/finchinaAPP/newsPlate/getRiskCompanyTrendDetail.action?endTime=20260817&fromTime=20230817&itCode2=BB276523229AE728755938AFFAC18A02",
-     "count": 1,
-     "keys": [
-      "returncode",
-      "info",
-      "data",
-      "tip",
-      "total"
-     ],
-     "rowCount": 0
     },
     {
      "code": "/finchinaAPP/v1/finchina-information/v2/information/riskMonitor/getInfoList?getInfoList",
@@ -241,6 +265,19 @@
       "total"
      ],
      "rowCount": 3
+    },
+    {
+     "code": "/finchinaAPP/newsPlate/getRiskCompanyTrendDetail.action?getRiskCompanyTrendDetail.action",
+     "url": "https://www.qyyjt.cn/finchinaAPP/newsPlate/getRiskCompanyTrendDetail.action?endTime=20260817&fromTime=20230817&itCode2=BB276523229AE728755938AFFAC18A02",
+     "count": 1,
+     "keys": [
+      "returncode",
+      "info",
+      "data",
+      "tip",
+      "total"
+     ],
+     "rowCount": 0
     }
    ],
    "paramTemplate": {
@@ -251,14 +288,14 @@
     "_t": "700",
     "dateStart": "20260217",
     "dateEnd": "20260817",
-    "endTime": "20260817",
-    "fromTime": "20230817",
-    "itCode2": "BB276523229AE728755938AFFAC18A02",
     "skip": "0",
     "size": "50",
     "f9Below": "true",
     "onlySeeSelf": "false",
-    "scene": "f9News"
+    "scene": "f9News",
+    "endTime": "20260817",
+    "fromTime": "20230817",
+    "itCode2": "BB276523229AE728755938AFFAC18A02"
    },
    "tables": [
     {
@@ -298,7 +335,26 @@
      "rowCount": 100
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -388,7 +444,26 @@
      "rowCount": 100
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -471,7 +546,26 @@
      "rowCount": 100
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -494,9 +588,9 @@
      "rowCount": 0
     },
     {
-     "code": "/finchinaAPP/v1/finchina-enterprise/stock/holder?holder",
-     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-enterprise/stock/holder?code=BB276523229AE728755938AFFAC18A02&type=company&typePercent=percent&page=1&pagesize=50&keyword=&overview=1&sortKey=&sortRule=&selected=&enterpriseStatus=&enterpriseType=&negativeType=",
-     "count": 2,
+     "code": "/finchinaAPP/v1/finchina-enterprise/stock/getControllerInfo?getControllerInfo",
+     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-enterprise/stock/getControllerInfo?code=BB276523229AE728755938AFFAC18A02&type=company&needSource=true",
+     "count": 1,
      "keys": [
       "returncode",
       "info",
@@ -507,9 +601,9 @@
      "rowCount": 0
     },
     {
-     "code": "/finchinaAPP/v1/finchina-enterprise/stock/getControllerInfo?getControllerInfo",
-     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-enterprise/stock/getControllerInfo?code=BB276523229AE728755938AFFAC18A02&type=company&needSource=true",
-     "count": 1,
+     "code": "/finchinaAPP/v1/finchina-enterprise/stock/holder?holder",
+     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-enterprise/stock/holder?code=BB276523229AE728755938AFFAC18A02&type=company&typePercent=percent&page=1&pagesize=50&keyword=&overview=1&sortKey=&sortRule=&selected=&enterpriseStatus=&enterpriseType=&negativeType=",
+     "count": 2,
      "keys": [
       "returncode",
       "info",
@@ -524,10 +618,10 @@
     "type": "company",
     "typePercent": "percent",
     "_t": "1262",
+    "needSource": "true",
     "page": "1",
     "pagesize": "50",
-    "overview": "1",
-    "needSource": "true"
+    "overview": "1"
    },
    "tables": [
     {
@@ -586,7 +680,28 @@
      "rowCount": 51
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -680,7 +795,30 @@
      "rowCount": 8
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -760,7 +898,34 @@
      "rowCount": 8
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "控股子公司(披露)",
+    "控股子公司(模型计算)",
+    "行业分布图",
+    "资本市场圈",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -846,7 +1011,34 @@
      "rowCount": 8
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "控股子公司(披露)",
+    "控股子公司(模型计算)",
+    "行业分布图",
+    "资本市场圈",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -915,7 +1107,34 @@
      "rowCount": 8
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "控股子公司(披露)",
+    "控股子公司(模型计算)",
+    "行业分布图",
+    "资本市场圈",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -924,19 +1143,6 @@
    ],
    "type": "leaf",
    "api": [
-    {
-     "code": "/finchinaAPP/v1/finchina-bond/v1/bond/overdue/distribution?distribution",
-     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-bond/v1/bond/overdue/distribution?type=company&debtorCode=BB276523229AE728755938AFFAC18A02&agg=endDate",
-     "count": 1,
-     "keys": [
-      "returncode",
-      "info",
-      "data",
-      "tip",
-      "total"
-     ],
-     "rowCount": 0
-    },
     {
      "code": "/finchinaAPP/v1/finchina-bond/v1/bond/company/abroadBondDefault/detail?detail",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-bond/v1/bond/company/abroadBondDefault/detail",
@@ -962,6 +1168,19 @@
      "rowCount": 0
     },
     {
+     "code": "/finchinaAPP/v1/finchina-bond/v1/bond/overdue/distribution?distribution",
+     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-bond/v1/bond/overdue/distribution?type=company&debtorCode=BB276523229AE728755938AFFAC18A02&agg=endDate",
+     "count": 1,
+     "keys": [
+      "returncode",
+      "info",
+      "data",
+      "tip",
+      "total"
+     ],
+     "rowCount": 0
+    },
+    {
      "code": "/finchinaAPP/v1/finchina-bond/v1/bond/dollar-bond/f9/offshore-bonds?offshore-bonds",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-bond/v1/bond/dollar-bond/f9/offshore-bonds?itCode=BB276523229AE728755938AFFAC18A02&type=company&bondStatus=1&source=1&size=10&sortKey=remainingPeriod&sortRule=asc&branchCompany=self",
      "count": 1,
@@ -975,14 +1194,27 @@
     },
     {
      "code": "/getData.action?getData.action",
-     "url": "https://www.qyyjt.cn/getData.action?type=company&code=BB276523229AE728755938AFFAC18A02&isContinuous=1&_t=434",
+     "url": "https://www.qyyjt.cn/getData.action?itCode2=BB276523229AE728755938AFFAC18A02&type=company&_t=1231",
      "count": 15,
      "keys": [
+      "total",
       "data",
       "returncode",
-      "key"
+      "tip",
+      "info"
      ],
      "rowCount": 1
+    },
+    {
+     "code": "/finchinaAPP/v1/finchina-bond/v1/bond/overdue/get-acceptor-list?get-acceptor-list",
+     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-bond/v1/bond/overdue/get-acceptor-list",
+     "count": 1,
+     "keys": [
+      "info",
+      "returncode",
+      "total"
+     ],
+     "rowCount": 0
     },
     {
      "code": "/finchinaAPP/v1/finchina-bond/v1/bond/approvalAmount/all?all",
@@ -993,17 +1225,6 @@
       "info",
       "data",
       "tip",
-      "total"
-     ],
-     "rowCount": 0
-    },
-    {
-     "code": "/finchinaAPP/v1/finchina-bond/v1/bond/overdue/get-acceptor-list?get-acceptor-list",
-     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-bond/v1/bond/overdue/get-acceptor-list",
-     "count": 1,
-     "keys": [
-      "info",
-      "returncode",
       "total"
      ],
      "rowCount": 0
@@ -1057,12 +1278,11 @@
     "sortKey": "remainingPeriod",
     "sortRule": "asc",
     "branchCompany": "self",
-    "isContinuous": "1",
-    "_t": "434",
+    "itCode2": "BB276523229AE728755938AFFAC18A02",
+    "_t": "1231",
     "sortKeyEnum": "1",
     "sortOrder": "1",
     "from": "0",
-    "itCode2": "BB276523229AE728755938AFFAC18A02",
     "skip": "0",
     "keyWordTypeNew": "1,2,3",
     "module_type": "non-standard-risk-f9-self",
@@ -1070,7 +1290,42 @@
     "sheetNames": "{ 0:\"非标资产风险-明细-本公司\"}"
    },
    "permission_denied": true,
-   "permission_msg": "入口[融资速览] 检测到权限提示 [权限不足]: ... |||1|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|权限不足，成为正式会员即可查看融资租赁|咨询开通|应收账款融资|共1条|序号|\t|质权人/受让人|\t|披"
+   "permission_msg": "入口[融资速览] 检测到权限提示 [权限不足]: ... |||1|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|权限不足，成为正式会员即可查看融资租赁|咨询开通|应收账款融资|共1条|序号|\t|质权人/受让人|\t|披",
+   "anchors": [
+    "债券融资2",
+    "债券持有人1",
+    "租赁融资1",
+    "应收账款融资1",
+    "授信额度2",
+    "DCM注册额度1",
+    "债券注册进程2"
+   ],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "控股子公司(披露)",
+    "控股子公司(模型计算)",
+    "行业分布图",
+    "资本市场圈",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -1177,7 +1432,42 @@
      "rowCount": 8
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [
+    "债券融资2",
+    "债券持有人1",
+    "租赁融资1",
+    "应收账款融资1",
+    "授信额度2",
+    "DCM注册额度1",
+    "债券注册进程2"
+   ],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "控股子公司(披露)",
+    "控股子公司(模型计算)",
+    "行业分布图",
+    "资本市场圈",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -1187,17 +1477,6 @@
    ],
    "type": "leaf",
    "api": [
-    {
-     "code": "/finchinaAPP/v1/finchinaUserAction/myPlan/listUserPlan?listUserPlan",
-     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchinaUserAction/myPlan/listUserPlan?moduleCode=qyjjdq",
-     "count": 1,
-     "keys": [
-      "returncode",
-      "info",
-      "data"
-     ],
-     "rowCount": 0
-    },
     {
      "code": "/finchinaAPP/devZone/f9DevZoneContrastDetail.action?f9DevZoneContrastDetail.action",
      "url": "https://www.qyyjt.cn/finchinaAPP/devZone/f9DevZoneContrastDetail.action?code=BB276523229AE728755938AFFAC18A02&type=company",
@@ -1226,8 +1505,31 @@
      "rowCount": 0
     },
     {
+     "code": "/finchinaAPP/v1/finchinaUserAction/myPlan/listUserPlan?listUserPlan",
+     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchinaUserAction/myPlan/listUserPlan?moduleCode=qyjjdq",
+     "count": 1,
+     "keys": [
+      "returncode",
+      "info",
+      "data"
+     ],
+     "rowCount": 0
+    },
+    {
      "code": "/finchinaAPP/v1/finchina-enterprise/v1/rating/viewpoint/list?list",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-enterprise/v1/rating/viewpoint/list?code=BB276523229AE728755938AFFAC18A02&type=company&areaFlag=true&ratingDateStart=&ratingDateEnd=&viewpointNature=&viewpointSource=0&skip=0&pageSize=9999",
+     "count": 1,
+     "keys": [
+      "returncode",
+      "info",
+      "data",
+      "tip"
+     ],
+     "rowCount": 0
+    },
+    {
+     "code": "/finchinaAPP/v1/finchina-economy/v1/area/economy/encyclopedia/update-detail-tip?update-detail-tip",
+     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-economy/v1/area/economy/encyclopedia/update-detail-tip",
      "count": 1,
      "keys": [
       "returncode",
@@ -1250,18 +1552,6 @@
      "rowCount": 0
     },
     {
-     "code": "/finchinaAPP/v1/finchina-economy/v1/area/economy/encyclopedia/update-detail-tip?update-detail-tip",
-     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-economy/v1/area/economy/encyclopedia/update-detail-tip",
-     "count": 1,
-     "keys": [
-      "returncode",
-      "info",
-      "data",
-      "tip"
-     ],
-     "rowCount": 0
-    },
-    {
      "code": "/finchinaAPP/v1/finchina-economy/v1/area/economy/encyclopedia/update-tip?update-tip",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-economy/v1/area/economy/encyclopedia/update-tip",
      "count": 1,
@@ -1275,9 +1565,9 @@
     }
    ],
    "paramTemplate": {
-    "moduleCode": "qyjjdq",
     "type": "company",
     "_t": "684",
+    "moduleCode": "qyjjdq",
     "areaFlag": "true",
     "viewpointSource": "0",
     "skip": "0",
@@ -1342,7 +1632,42 @@
      "rowCount": 8
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [
+    "债券融资2",
+    "债券持有人1",
+    "租赁融资1",
+    "应收账款融资1",
+    "授信额度2",
+    "DCM注册额度1",
+    "债券注册进程2"
+   ],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "控股子公司(披露)",
+    "控股子公司(模型计算)",
+    "行业分布图",
+    "资本市场圈",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -1429,7 +1754,42 @@
      "rowCount": 8
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [
+    "债券融资2",
+    "债券持有人1",
+    "租赁融资1",
+    "应收账款融资1",
+    "授信额度2",
+    "DCM注册额度1",
+    "债券注册进程2"
+   ],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "控股子公司(披露)",
+    "控股子公司(模型计算)",
+    "行业分布图",
+    "资本市场圈",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -1527,7 +1887,42 @@
      "rowCount": 8
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [
+    "债券融资2",
+    "债券持有人1",
+    "租赁融资1",
+    "应收账款融资1",
+    "授信额度2",
+    "DCM注册额度1",
+    "债券注册进程2"
+   ],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "控股子公司(披露)",
+    "控股子公司(模型计算)",
+    "行业分布图",
+    "资本市场圈",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -1637,7 +2032,34 @@
      "rowCount": 8
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "控股子公司(披露)",
+    "控股子公司(模型计算)",
+    "行业分布图",
+    "资本市场圈",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -1649,7 +2071,7 @@
    "api": [
     {
      "code": "/finchinaAPP/v1/finchina-economy/v1/area/company/getNonStandardListByCompany?getNonStandardListByCompany",
-     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-economy/v1/area/company/getNonStandardListByCompany?code=BB276523229AE728755938AFFAC18A02&type=company&caliber=1&sort=reportDate%3Adesc&skip=0&pageSize=6",
+     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-economy/v1/area/company/getNonStandardListByCompany?code=BB276523229AE728755938AFFAC18A02&type=company&caliber=2&sort=reportDate%3Adesc&skip=0&pageSize=6",
      "count": 2,
      "keys": [
       "returncode",
@@ -1662,7 +2084,7 @@
    ],
    "paramTemplate": {
     "type": "company",
-    "caliber": "1",
+    "caliber": "2",
     "sort": "reportDate:desc",
     "skip": "0",
     "pageSize": "6"
@@ -1744,6 +2166,33 @@
      ],
      "rows": 6
     }
+   ],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "控股子公司(披露)",
+    "控股子公司(模型计算)",
+    "行业分布图",
+    "资本市场圈",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
    ]
   },
   {
@@ -1865,6 +2314,33 @@
      ],
      "rows": 6
     }
+   ],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "控股子公司(披露)",
+    "控股子公司(模型计算)",
+    "行业分布图",
+    "资本市场圈",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
    ]
   },
   {
@@ -1987,6 +2463,33 @@
      ],
      "rows": 6
     }
+   ],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "控股子公司(披露)",
+    "控股子公司(模型计算)",
+    "行业分布图",
+    "资本市场圈",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
    ]
   },
   {
@@ -2108,6 +2611,33 @@
      ],
      "rows": 6
     }
+   ],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "控股子公司(披露)",
+    "控股子公司(模型计算)",
+    "行业分布图",
+    "资本市场圈",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
    ]
   },
   {
@@ -2121,7 +2651,7 @@
     {
      "code": "/getData.action?getData.action",
      "url": "https://www.qyyjt.cn/getData.action?pageCode=web-annotationsF9-common-DebtreceivalbeTopfive&type=company&code=BB276523229AE728755938AFFAC18A02&reportDateField=IT8501_13&_t=1072",
-     "count": 2,
+     "count": 1,
      "keys": [
       "total",
       "data",
@@ -2229,6 +2759,33 @@
      ],
      "rows": 6
     }
+   ],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "控股子公司(披露)",
+    "控股子公司(模型计算)",
+    "行业分布图",
+    "资本市场圈",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
    ]
   },
   {
@@ -2259,7 +2816,16 @@
      "rowCount": 2
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -2271,39 +2837,26 @@
     {
      "code": "/finchinaAPP/v1/finchina-information/v1/information/riskMonitor/getPlanFilterTree?getPlanFilterTree",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-information/v1/information/riskMonitor/getPlanFilterTree?groupType=created",
-     "count": 2,
+     "count": 1,
      "keys": [
-      "info",
       "returncode",
-      "total"
+      "info",
+      "data",
+      "tip"
      ],
      "rowCount": 7
     },
     {
      "code": "/finchinaAPP/v1/finchina-information/v1/information/riskMonitor/getInfoList?getInfoList",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-information/v1/information/riskMonitor/getInfoList",
-     "count": 2,
-     "keys": [
-      "info",
-      "returncode",
-      "total"
-     ],
-     "rowCount": 1
-    },
-    {
-     "code": "/refresh.action?refresh.action",
-     "url": "https://www.qyyjt.cn/refresh.action?time=1786974324897&terminal=web",
      "count": 1,
      "keys": [
-      "data",
       "returncode",
-      "accessTokenTime",
-      "accessToken",
-      "refreshTokenTime",
       "info",
-      "refreshToken"
+      "data",
+      "tip"
      ],
-     "rowCount": 0
+     "rowCount": 1
     },
     {
      "code": "/finchinaAPP/v1/finchina-information/v2/information/riskMonitor/getInfoList?getInfoList",
@@ -2319,9 +2872,7 @@
     }
    ],
    "paramTemplate": {
-    "groupType": "created",
-    "time": "1786974324897",
-    "terminal": "web"
+    "groupType": "created"
    },
    "tables": [
     {
@@ -2348,7 +2899,26 @@
      "rowCount": 100
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -2410,7 +2980,26 @@
      "rowCount": 100
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -2487,7 +3076,26 @@
      "rowCount": 100
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -2557,7 +3165,26 @@
      "rowCount": 100
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -2670,7 +3297,28 @@
      "rowCount": 100
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -2679,6 +3327,16 @@
    ],
    "type": "leaf",
    "api": [
+    {
+     "code": "/finchinaAPP/control/criticalPath.action?criticalPath.action",
+     "url": "https://www.qyyjt.cn/finchinaAPP/control/criticalPath.action?code=BB276523229AE728755938AFFAC18A02&type=company",
+     "count": 1,
+     "keys": [
+      "data",
+      "returncode"
+     ],
+     "rowCount": 0
+    },
     {
      "code": "/finchinaAPP/v1/finchina-enterprise/stock/getControllerGraph?getControllerGraph",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-enterprise/stock/getControllerGraph?code=BB276523229AE728755938AFFAC18A02&type=company",
@@ -2689,6 +3347,17 @@
       "data",
       "tip",
       "total"
+     ],
+     "rowCount": 0
+    },
+    {
+     "code": "/getData.action?getData.action",
+     "url": "https://www.qyyjt.cn/getData.action?_t=170",
+     "count": 1,
+     "keys": [
+      "data",
+      "returncode",
+      "key"
      ],
      "rowCount": 0
     },
@@ -2704,33 +3373,12 @@
       "total"
      ],
      "rowCount": 0
-    },
-    {
-     "code": "/finchinaAPP/control/criticalPath.action?criticalPath.action",
-     "url": "https://www.qyyjt.cn/finchinaAPP/control/criticalPath.action?code=BB276523229AE728755938AFFAC18A02&type=company",
-     "count": 1,
-     "keys": [
-      "data",
-      "returncode"
-     ],
-     "rowCount": 0
-    },
-    {
-     "code": "/getData.action?getData.action",
-     "url": "https://www.qyyjt.cn/getData.action?_t=170",
-     "count": 1,
-     "keys": [
-      "data",
-      "returncode",
-      "key"
-     ],
-     "rowCount": 0
     }
    ],
    "paramTemplate": {
     "type": "company",
-    "needSource": "true",
-    "_t": "170"
+    "_t": "170",
+    "needSource": "true"
    },
    "tables": [
     {
@@ -2787,7 +3435,28 @@
      "rowCount": 100
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -2798,7 +3467,28 @@
    "api": [],
    "paramTemplate": null,
    "permission_denied": true,
-   "permission_msg": "入口[受益所有人] 检测到权限提示 [权限不足]: ...28亿|N恒兴|30.05+14.03+87.58%||证券代码、简称，命令|权限不足||成为正式用户即可查看受益所有人查看详情||立即联系客服升级"
+   "permission_msg": "入口[受益所有人] 检测到权限提示 [权限不足]: ...28亿|N恒兴|30.05+14.03+87.58%||证券代码、简称，命令|权限不足||成为正式用户即可查看受益所有人查看详情||立即联系客服升级",
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -2834,7 +3524,30 @@
     "_t": "122"
    },
    "permission_denied": true,
-   "permission_msg": "入口[对外投资企业 7] 检测到权限提示 [权限不足]: ...28亿|N恒兴|30.05+14.03+87.58%||证券代码、简称，命令|权限不足||成为正式用户即可查看受益所有人查看详情||立即联系客服升级"
+   "permission_msg": "入口[对外投资企业 7] 检测到权限提示 [权限不足]: ...28亿|N恒兴|30.05+14.03+87.58%||证券代码、简称，命令|权限不足||成为正式用户即可查看受益所有人查看详情||立即联系客服升级",
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46",
+    "股东信息",
+    "股东信息(含间接)",
+    "对外投资企业",
+    "对外投资企业(含间接)",
+    "最新动态",
+    "按类型统计",
+    "全部",
+    "新闻舆情",
+    "公司公告",
+    "信用数据",
+    "司法诉讼",
+    "企业融资",
+    "公司经营",
+    "关联方风险"
+   ]
   },
   {
    "path": [
@@ -2850,6 +3563,17 @@
    "type": "leaf",
    "api": [
     {
+     "code": "/getData.action?getData.action",
+     "url": "https://www.qyyjt.cn/getData.action?code=BB276523229AE728755938AFFAC18A02&type=company&statisticType=week&startDate=2026-02-17&endDate=2026-08-17&_t=700",
+     "count": 7,
+     "keys": [
+      "data",
+      "returncode",
+      "info"
+     ],
+     "rowCount": 0
+    },
+    {
      "code": "/finchinaAPP/newsPlate/getRiskCompanyTrendDetail.action?getRiskCompanyTrendDetail.action",
      "url": "https://www.qyyjt.cn/finchinaAPP/newsPlate/getRiskCompanyTrendDetail.action?endTime=20260817&fromTime=20230817&itCode2=BB276523229AE728755938AFFAC18A02",
      "count": 1,
@@ -2859,17 +3583,6 @@
       "data",
       "tip",
       "total"
-     ],
-     "rowCount": 0
-    },
-    {
-     "code": "/getData.action?getData.action",
-     "url": "https://www.qyyjt.cn/getData.action?code=BB276523229AE728755938AFFAC18A02&type=company&statisticType=week&startDate=2026-02-17&endDate=2026-08-17&_t=700",
-     "count": 7,
-     "keys": [
-      "data",
-      "returncode",
-      "info"
      ],
      "rowCount": 0
     },
@@ -2924,14 +3637,14 @@
     }
    ],
    "paramTemplate": {
-    "endTime": "20260817",
-    "fromTime": "20230817",
-    "itCode2": "BB276523229AE728755938AFFAC18A02",
     "type": "company",
     "statisticType": "week",
     "startDate": "2026-02-17",
     "endDate": "2026-08-17",
     "_t": "700",
+    "endTime": "20260817",
+    "fromTime": "20230817",
+    "itCode2": "BB276523229AE728755938AFFAC18A02",
     "dateStart": "20260217",
     "dateEnd": "20260817",
     "skip": "0",
@@ -2967,7 +3680,16 @@
      "rowCount": 51
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -3001,17 +3723,6 @@
      "rowCount": 0
     },
     {
-     "code": "/finchinaAPP/v1/finchina-search/v1/webNotice/getF9NoticeList?getF9NoticeList",
-     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-search/v1/webNotice/getF9NoticeList",
-     "count": 1,
-     "keys": [
-      "data",
-      "returncode",
-      "length"
-     ],
-     "rowCount": 4
-    },
-    {
      "code": "/finchinaAPP/v1/finchina-search/v1/webNotice/getNoticeStaticInfo?getNoticeStaticInfo",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-search/v1/webNotice/getNoticeStaticInfo?code=BB276523229AE728755938AFFAC18A02&type=company&filterType=50&size=50&etime=&text=&startDate=&endDate=&oneLevelItemCode=50&f9Below=true&extraParams=&tab=",
      "count": 1,
@@ -3023,6 +3734,17 @@
       "total"
      ],
      "rowCount": 0
+    },
+    {
+     "code": "/finchinaAPP/v1/finchina-search/v1/webNotice/getF9NoticeList?getF9NoticeList",
+     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-search/v1/webNotice/getF9NoticeList",
+     "count": 1,
+     "keys": [
+      "data",
+      "returncode",
+      "length"
+     ],
+     "rowCount": 4
     }
    ],
    "paramTemplate": {
@@ -3072,7 +3794,16 @@
      "rowCount": 5
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -3121,7 +3852,16 @@
      "rowCount": 5
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -3130,6 +3870,17 @@
    ],
    "type": "leaf",
    "api": [
+    {
+     "code": "/getData.action?getData.action",
+     "url": "https://www.qyyjt.cn/getData.action?code=BB276523229AE728755938AFFAC18A02&type=company&statisticType=week&startDate=2023-08-17&endDate=2026-08-17&_t=700",
+     "count": 5,
+     "keys": [
+      "data",
+      "returncode",
+      "info"
+     ],
+     "rowCount": 15
+    },
     {
      "code": "/finchinaAPP/v1/finchina-information/v1/information/opinion_analysis/warning-one-top5?warning-one-top5",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-information/v1/information/opinion_analysis/warning-one-top5?code=BB276523229AE728755938AFFAC18A02&type=company&dateStart=20260217&dateEnd=20260817",
@@ -3141,17 +3892,6 @@
       "tip"
      ],
      "rowCount": 0
-    },
-    {
-     "code": "/getData.action?getData.action",
-     "url": "https://www.qyyjt.cn/getData.action?code=BB276523229AE728755938AFFAC18A02&type=company&startDate=20260217&endDate=20260817&_t=932",
-     "count": 5,
-     "keys": [
-      "data",
-      "returncode",
-      "info"
-     ],
-     "rowCount": 15
     },
     {
      "code": "/finchinaAPP/v1/finchina-information/v1/information/opinion_analysis/warning-two-top10?warning-two-top10",
@@ -3178,19 +3918,6 @@
      "rowCount": 5
     },
     {
-     "code": "/finchinaAPP/newsPlate/getRiskCompanyTrendDetail.action?getRiskCompanyTrendDetail.action",
-     "url": "https://www.qyyjt.cn/finchinaAPP/newsPlate/getRiskCompanyTrendDetail.action?endTime=20260817&fromTime=20230817&itCode2=BB276523229AE728755938AFFAC18A02&type=company",
-     "count": 1,
-     "keys": [
-      "returncode",
-      "info",
-      "data",
-      "tip",
-      "total"
-     ],
-     "rowCount": 0
-    },
-    {
      "code": "/finchinaAPP/v1/finchina-information/v1/information/opinion_analysis/emotion-trend-info?emotion-trend-info",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-information/v1/information/opinion_analysis/emotion-trend-info?code=BB276523229AE728755938AFFAC18A02&type=company&frequency=week&dateStart=20260217&dateEnd=20260817",
      "count": 1,
@@ -3215,6 +3942,19 @@
      "rowCount": 3
     },
     {
+     "code": "/finchinaAPP/newsPlate/getRiskCompanyTrendDetail.action?getRiskCompanyTrendDetail.action",
+     "url": "https://www.qyyjt.cn/finchinaAPP/newsPlate/getRiskCompanyTrendDetail.action?endTime=20260817&fromTime=20230817&itCode2=BB276523229AE728755938AFFAC18A02&type=company",
+     "count": 1,
+     "keys": [
+      "returncode",
+      "info",
+      "data",
+      "tip",
+      "total"
+     ],
+     "rowCount": 0
+    },
+    {
      "code": "/finchinaAPP/v1/finchina-information/v1/information/opinion_analysis/relate-top10?relate-top10",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-information/v1/information/opinion_analysis/relate-top10?code=BB276523229AE728755938AFFAC18A02&type=company&dateStart=20260217&dateEnd=20260817",
      "count": 1,
@@ -3229,15 +3969,16 @@
    ],
    "paramTemplate": {
     "type": "company",
+    "statisticType": "week",
+    "startDate": "2023-08-17",
+    "endDate": "2026-08-17",
+    "_t": "700",
     "dateStart": "20260217",
     "dateEnd": "20260817",
-    "startDate": "20260217",
-    "endDate": "20260817",
-    "_t": "932",
+    "frequency": "week",
     "endTime": "20260817",
     "fromTime": "20230817",
-    "itCode2": "BB276523229AE728755938AFFAC18A02",
-    "frequency": "week"
+    "itCode2": "BB276523229AE728755938AFFAC18A02"
    },
    "tables": [
     {
@@ -3278,7 +4019,16 @@
      "rowCount": 5
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -3357,7 +4107,16 @@
      "rowCount": 5
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -3439,7 +4198,16 @@
      "rowCount": 19
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -3669,7 +4437,16 @@
      "rowCount": 41
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -3821,7 +4598,16 @@
      "rowCount": 41
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -3984,7 +4770,16 @@
      "rowCount": 41
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -4095,7 +4890,16 @@
      "rowCount": 39
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -4106,7 +4910,7 @@
    "api": [
     {
      "code": "/finchinaAPP/v1/finchina-economy/v1/area/company/getNonStandardListByCompany?getNonStandardListByCompany",
-     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-economy/v1/area/company/getNonStandardListByCompany?code=BB276523229AE728755938AFFAC18A02&type=company&caliber=2&sort=reportDate%3Adesc&skip=0&pageSize=6",
+     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-economy/v1/area/company/getNonStandardListByCompany?code=BB276523229AE728755938AFFAC18A02&type=company&caliber=1&sort=reportDate%3Adesc&skip=0&pageSize=6",
      "count": 2,
      "keys": [
       "returncode",
@@ -4119,7 +4923,7 @@
    ],
    "paramTemplate": {
     "type": "company",
-    "caliber": "2",
+    "caliber": "1",
     "sort": "reportDate:desc",
     "skip": "0",
     "pageSize": "6"
@@ -4209,6 +5013,15 @@
      ],
      "rows": 6
     }
+   ],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
    ]
   },
   {
@@ -4333,6 +5146,15 @@
      ],
      "rows": 6
     }
+   ],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
    ]
   },
   {
@@ -4428,7 +5250,16 @@
      "rowCount": 1
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -4487,7 +5318,16 @@
      "rowCount": 1
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -4581,7 +5421,16 @@
      "rowCount": 1
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -4645,7 +5494,16 @@
      "rowCount": 1
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -4712,7 +5570,16 @@
      "rowCount": 2
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -4779,7 +5646,16 @@
      "rowCount": 2
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -4809,7 +5685,16 @@
      "rowCount": 2
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -4833,7 +5718,16 @@
      "rowCount": 2
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -4857,7 +5751,16 @@
      "rowCount": 2
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -4881,7 +5784,16 @@
      "rowCount": 2
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -4905,7 +5817,16 @@
      "rowCount": 2
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -4956,7 +5877,16 @@
      "rowCount": 2
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -4990,6 +5920,30 @@
      "rowCount": 0
     },
     {
+     "code": "/finchinaAPP/v1/finchina-bond/v1/bond/overdue/distribution?distribution",
+     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-bond/v1/bond/overdue/distribution?type=company&debtorCode=BB276523229AE728755938AFFAC18A02&agg=endDate",
+     "count": 1,
+     "keys": [
+      "returncode",
+      "info",
+      "data",
+      "tip",
+      "total"
+     ],
+     "rowCount": 0
+    },
+    {
+     "code": "/getData.action?getData.action",
+     "url": "https://www.qyyjt.cn/getData.action?type=company&code=BB276523229AE728755938AFFAC18A02&isContinuous=1&_t=434",
+     "count": 15,
+     "keys": [
+      "data",
+      "returncode",
+      "key"
+     ],
+     "rowCount": 2
+    },
+    {
      "code": "/finchinaAPP/v1/finchina-bond/v1/bond/dollar-bond/f9/offshore-bonds?offshore-bonds",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-bond/v1/bond/dollar-bond/f9/offshore-bonds?itCode=BB276523229AE728755938AFFAC18A02&type=company&bondStatus=1&source=1&size=10&sortKey=remainingPeriod&sortRule=asc&branchCompany=self",
      "count": 1,
@@ -5000,19 +5954,6 @@
       "tip"
      ],
      "rowCount": 0
-    },
-    {
-     "code": "/getData.action?getData.action",
-     "url": "https://www.qyyjt.cn/getData.action?itCode2=BB276523229AE728755938AFFAC18A02&type=company&_t=1231",
-     "count": 15,
-     "keys": [
-      "total",
-      "data",
-      "returncode",
-      "tip",
-      "info"
-     ],
-     "rowCount": 1
     },
     {
      "code": "/finchinaAPP/v1/finchina-bond/v1/bond/approvalAmount/all?all",
@@ -5034,6 +5975,19 @@
      "keys": [
       "info",
       "returncode",
+      "total"
+     ],
+     "rowCount": 0
+    },
+    {
+     "code": "/finchinaAPP/v1/finchina-bond/v1/bond/overdue/debt?debt",
+     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-bond/v1/bond/overdue/debt?type=company&debtorCode=BB276523229AE728755938AFFAC18A02&branchCompany=&keyword=&publishDateFrom=&publishDateTo=&sortKeyEnum=1&sortOrder=1&from=0&size=10",
+     "count": 1,
+     "keys": [
+      "returncode",
+      "info",
+      "data",
+      "tip",
       "total"
      ],
      "rowCount": 0
@@ -5061,58 +6015,50 @@
       "tip"
      ],
      "rowCount": 0
-    },
-    {
-     "code": "/finchinaAPP/v1/finchina-bond/v1/bond/overdue/debt?debt",
-     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-bond/v1/bond/overdue/debt?type=company&debtorCode=BB276523229AE728755938AFFAC18A02&branchCompany=&keyword=&publishDateFrom=&publishDateTo=&sortKeyEnum=1&sortOrder=1&from=0&size=10",
-     "count": 1,
-     "keys": [
-      "returncode",
-      "info",
-      "data",
-      "tip",
-      "total"
-     ],
-     "rowCount": 0
-    },
-    {
-     "code": "/finchinaAPP/v1/finchina-bond/v1/bond/overdue/distribution?distribution",
-     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-bond/v1/bond/overdue/distribution?type=company&debtorCode=BB276523229AE728755938AFFAC18A02&agg=endDate",
-     "count": 1,
-     "keys": [
-      "returncode",
-      "info",
-      "data",
-      "tip",
-      "total"
-     ],
-     "rowCount": 0
     }
    ],
    "paramTemplate": {
-    "itCode": "BB276523229AE728755938AFFAC18A02",
     "type": "company",
+    "debtorCode": "BB276523229AE728755938AFFAC18A02",
+    "agg": "endDate",
+    "isContinuous": "1",
+    "_t": "434",
+    "itCode": "BB276523229AE728755938AFFAC18A02",
     "bondStatus": "1",
     "source": "1",
     "size": "10",
     "sortKey": "remainingPeriod",
     "sortRule": "asc",
     "branchCompany": "self",
-    "itCode2": "BB276523229AE728755938AFFAC18A02",
-    "_t": "1231",
-    "skip": "0",
+    "sortKeyEnum": "1",
+    "sortOrder": "1",
     "from": "0",
+    "itCode2": "BB276523229AE728755938AFFAC18A02",
+    "skip": "0",
     "keyWordTypeNew": "1,2,3",
     "module_type": "non-standard-risk-f9-self",
     "exportFlag": "true",
-    "sheetNames": "{ 0:\"非标资产风险-明细-本公司\"}",
-    "debtorCode": "BB276523229AE728755938AFFAC18A02",
-    "sortKeyEnum": "1",
-    "sortOrder": "1",
-    "agg": "endDate"
+    "sheetNames": "{ 0:\"非标资产风险-明细-本公司\"}"
    },
    "permission_denied": true,
-   "permission_msg": "入口[融资速览] 检测到权限提示 [权限不足]: ... |||1|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|权限不足，成为正式会员即可查看融资租赁|咨询开通|应收账款融资|共1条|序号|\t|质权人/受让人|\t|披"
+   "permission_msg": "入口[融资速览] 检测到权限提示 [权限不足]: ... |||1|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|权限不足，成为正式会员即可查看融资租赁|咨询开通|应收账款融资|共1条|序号|\t|质权人/受让人|\t|披",
+   "anchors": [
+    "债券融资2",
+    "债券持有人1",
+    "租赁融资1",
+    "应收账款融资1",
+    "授信额度2",
+    "DCM注册额度1",
+    "债券注册进程2"
+   ],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -5131,7 +6077,24 @@
    "api": [],
    "paramTemplate": null,
    "permission_denied": true,
-   "permission_msg": "入口[债券违约] 检测到权限提示 [权限不足]: ... |||1|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|权限不足，成为正式会员即可查看融资租赁|咨询开通|应收账款融资|共1条|序号|\t|质权人/受让人|\t|披"
+   "permission_msg": "入口[债券违约] 检测到权限提示 [权限不足]: ... |||1|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|-|\t|权限不足，成为正式会员即可查看融资租赁|咨询开通|应收账款融资|共1条|序号|\t|质权人/受让人|\t|披",
+   "anchors": [
+    "债券融资2",
+    "债券持有人1",
+    "租赁融资1",
+    "应收账款融资1",
+    "授信额度2",
+    "DCM注册额度1",
+    "债券注册进程2"
+   ],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -5201,7 +6164,16 @@
      "rowCount": 121
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -5212,7 +6184,7 @@
    "api": [
     {
      "code": "/getData.action?getData.action",
-     "url": "https://www.qyyjt.cn/getData.action?type=company&code=BB276523229AE728755938AFFAC18A02&_t=1370",
+     "url": "https://www.qyyjt.cn/getData.action?type=company&code=BB276523229AE728755938AFFAC18A02&_t=1369",
      "count": 5,
      "keys": [
       "total",
@@ -5226,7 +6198,7 @@
    ],
    "paramTemplate": {
     "type": "company",
-    "_t": "1370"
+    "_t": "1369"
    },
    "tables": [
     {
@@ -5268,7 +6240,16 @@
      "rowCount": 23
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -5290,18 +6271,6 @@
      "rowCount": 1
     },
     {
-     "code": "/finchinaAPP/v1/finchina-enterprise//v1/enterprise/company_f9_tag/table_list?table_list",
-     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-enterprise//v1/enterprise/company_f9_tag/table_list?code=BB276523229AE728755938AFFAC18A02&appraiseOrg=&declareYear=&isContainExpired=1&keyWord=&listRank=&pageSize=12&ratingGrade=&skip=0&sort=declareDate%3Adesc%2Cyear%3Adesc&tagName=&tagType=9&type=company",
-     "count": 2,
-     "keys": [
-      "returncode",
-      "info",
-      "data",
-      "tip"
-     ],
-     "rowCount": 0
-    },
-    {
      "code": "/finchinaAPP/v1/finchina-enterprise/v1/enterprise/company_f9_tag/table_filter_items?table_filter_items",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-enterprise/v1/enterprise/company_f9_tag/table_filter_items?code=BB276523229AE728755938AFFAC18A02&appraiseOrg=&declareYear=&isContainExpired=1&keyWord=&listRank=&pageSize=12&ratingGrade=&skip=0&sort=declareDate%3Adesc%2Cyear%3Adesc&tagName=&tagType=9&type=company",
      "count": 2,
@@ -5312,6 +6281,18 @@
       "tip"
      ],
      "rowCount": 3
+    },
+    {
+     "code": "/finchinaAPP/v1/finchina-enterprise//v1/enterprise/company_f9_tag/table_list?table_list",
+     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-enterprise//v1/enterprise/company_f9_tag/table_list?code=BB276523229AE728755938AFFAC18A02&appraiseOrg=&declareYear=&isContainExpired=1&keyWord=&listRank=&pageSize=12&ratingGrade=&skip=0&sort=declareDate%3Adesc%2Cyear%3Adesc&tagName=&tagType=9&type=company",
+     "count": 2,
+     "keys": [
+      "returncode",
+      "info",
+      "data",
+      "tip"
+     ],
+     "rowCount": 0
     }
    ],
    "paramTemplate": {
@@ -5388,7 +6369,16 @@
      "rowCount": 23
     }
    ],
-   "matrix": []
+   "matrix": [],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   },
   {
    "path": [
@@ -5404,19 +6394,6 @@
    "type": "leaf",
    "api": [
     {
-     "code": "/finchinaAPP/v1/finchina-finance/v1/finance/financeSelect/getSmallCodeUnCastList?getSmallCodeUnCastList",
-     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-finance/v1/finance/financeSelect/getSmallCodeUnCastList?code=BB276523229AE728755938AFFAC18A02&type=company&childType=mainIndicatorsF9",
-     "count": 1,
-     "keys": [
-      "returncode",
-      "info",
-      "data",
-      "tip",
-      "total"
-     ],
-     "rowCount": 0
-    },
-    {
      "code": "/finchinaAPP/v1/finchina-finance/v1/finance/report/getStockCodeList?getStockCodeList",
      "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-finance/v1/finance/report/getStockCodeList?code=BB276523229AE728755938AFFAC18A02&type=company&childType=mainIndicatorsF9",
      "count": 1,
@@ -5428,6 +6405,19 @@
       "total"
      ],
      "rowCount": 1
+    },
+    {
+     "code": "/finchinaAPP/v1/finchina-finance/v1/finance/financeSelect/getSmallCodeUnCastList?getSmallCodeUnCastList",
+     "url": "https://www.qyyjt.cn/finchinaAPP/v1/finchina-finance/v1/finance/financeSelect/getSmallCodeUnCastList?code=BB276523229AE728755938AFFAC18A02&type=company&childType=mainIndicatorsF9",
+     "count": 1,
+     "keys": [
+      "returncode",
+      "info",
+      "data",
+      "tip",
+      "total"
+     ],
+     "rowCount": 0
     },
     {
      "code": "/getData.action?getData.action",
@@ -5518,6 +6508,15 @@
      ],
      "rows": 58
     }
+   ],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户",
+    "供应商"
    ]
   },
   {
@@ -5640,6 +6639,15 @@
      ],
      "rows": 76
     }
+   ],
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户",
+    "供应商"
    ]
   },
   {
@@ -5657,7 +6665,16 @@
    "api": [],
    "paramTemplate": null,
    "permission_denied": true,
-   "permission_msg": "入口[司法案件 14] 检测到权限提示 [权限不足]: ...28亿|N恒兴|30.05+14.03+87.58%||证券代码、简称，命令|权限不足||成为正式用户即可查看司法案件查看详情||立即联系客服升级"
+   "permission_msg": "入口[司法案件 14] 检测到权限提示 [权限不足]: ...28亿|N恒兴|30.05+14.03+87.58%||证券代码、简称，命令|权限不足||成为正式用户即可查看司法案件查看详情||立即联系客服升级",
+   "anchors": [],
+   "tabs": [
+    "股东信息1",
+    "对外投资7",
+    "控股子公司6",
+    "所属集团成员29",
+    "客户12",
+    "供应商46"
+   ]
   }
  ]
 }

@@ -17,13 +17,42 @@ import json
 import re
 from urllib.parse import urlparse, parse_qsl, urlencode
 
-from qyyjt_common import (collect_tree, locate_path, click_entry, check_quota,
-                          check_permission, PermissionDenied, QuotaExceeded)
+from qyyjt_common import (collect_tree, locate_path, find_in_level, click_entry,
+                          check_quota, check_permission, collect_entries,
+                          PermissionDenied, QuotaExceeded)
 
 
 # ═══════════════════════════════════════════════════════════
 # P1: BranchNavigator
 # ═══════════════════════════════════════════════════════════
+def find_deep(nodes, seg):
+    """在当前层及所有后代中查找入口(子串匹配)"""
+    for n in nodes:
+        t = n['text']
+        if t == seg or seg in t or t in seg:
+            return n
+        r = find_deep(n.get('children', []), seg)
+        if r is not None:
+            return r
+    return None
+
+
+def locate_path_fuzzy(tree, path):
+    """模糊定位: 每段在当前层子树中匹配, 允许省略中间目录。
+
+    如 ['企业速览', '股东信息1'] 会自动定位到 常用模块/企业速览, 再在其
+    页面级入口中匹配(由 navigate 的 anchor/tab 兜底处理)。"""
+    level = tree
+    for seg in path:
+        e = find_in_level(level, seg)
+        if e is None:
+            e = find_deep(level, seg)
+        if e is None:
+            return None
+        level = e.get('children', [])
+    return e
+
+
 class BranchNavigator:
     """分支导航执行器: 依序执行路径步骤, 每步失败检测+重试。"""
 
@@ -49,31 +78,44 @@ class BranchNavigator:
         })()""")
 
     async def navigate(self, path, wait_ms=4000, retries=2):
-        """按文本路径导航: 中间级逐级展开, 末级点击进入。
+        """按文本路径导航: 中间级逐级展开/进入, 末级点击。
 
-        每步点击后比对内容签名: 无变化视为点击未生效, 自动重试(retries 次)。
-        中间级若已展开(sw=open)则跳过点击, 避免收起已展开目录。
-        返回末级入口 dict 或 None。
+        中间级: expandable 目录点击展开; 叶子入口点击进入(其页面内可能有锚点/Tab)。
+        末级: 树节点优先; 树中找不到时回退到当前页面的锚点(anchor)/Tab——支持
+        "融资速览/债券融资" 这类 树叶子+页内入口 的级联路径。
+        返回末级入口 dict(含 kind: tree/anchor/tab) 或 None。
         """
         for i in range(len(path) - 1):
             tree = await collect_tree(self.page)
-            e = locate_path(tree, path[:i + 1])
+            e = locate_path_fuzzy(tree, path[:i + 1])
             if e is None:
-                return None
+                # 中间级在树中找不到: 尝试当前页面的 anchor/tab
+                e2 = await self._find_page_entry(path[:i + 1][-1])
+                if e2 is None:
+                    return None
+                e = e2
             if e.get('sw') == 'open':
                 continue  # 已展开, 无需点击
             ok = False
             for attempt in range(retries + 1):
                 before = await self._signature()
                 tree = await collect_tree(self.page)
-                e = locate_path(tree, path[:i + 1])
+                e = locate_path_fuzzy(tree, path[:i + 1])
                 if e is None:
-                    return None
-                if not e.get('expandable'):
-                    ok = True
+                    e = await self._find_page_entry(path[:i + 1][-1])
+                    if e is None:
+                        return None
+                if e.get('kind') == 'tree' and not e.get('expandable'):
+                    # 叶子中间级: 点击进入其页面(点击成功即返回, 无变化不代表失败)
+                    clicked = await click_entry(self.page,
+                                                {'kind': 'tree', 'index': e['index']},
+                                                wait_ms=2500)
+                    await self.wait_stable()
+                    ok = clicked
                     break
                 clicked = await click_entry(self.page,
-                                            {'kind': 'tree', 'index': e['index']},
+                                            {'kind': e.get('kind', 'tree'),
+                                             'index': e['index']},
                                             wait_ms=2500)
                 await self.wait_stable()
                 after = await self._signature()
@@ -84,16 +126,31 @@ class BranchNavigator:
             if not ok:
                 self.log(f'!! 展开[{path[i]}] 多次尝试无效果')
                 return None
-        # 末级: 点击即返回(不校验签名——目标页面可能与当前相同, 签名无变化不代表失败;
-        # 加载失败/权限不足由后续 check_quota/check_permission 兜底)
+        # 末级: 树节点优先, 否则当前页面 anchor/tab
         tree = await collect_tree(self.page)
-        e = locate_path(tree, path)
-        if e is None:
+        e = locate_path_fuzzy(tree, path)
+        if e is not None:
+            clicked = await click_entry(self.page, {'kind': 'tree', 'index': e['index']},
+                                        wait_ms=wait_ms)
+            if clicked:
+                return e
             return None
-        clicked = await click_entry(self.page, {'kind': 'tree', 'index': e['index']},
-                                    wait_ms=wait_ms)
-        if clicked:
-            return e
+        e = await self._find_page_entry(path[-1])
+        if e is not None:
+            clicked = await click_entry(self.page, {'kind': e['kind'], 'index': e['index']},
+                                        wait_ms=wait_ms)
+            if clicked:
+                return e
+        return None
+
+    async def _find_page_entry(self, seg):
+        """在当前页面的锚点/Tab 中查找入口"""
+        entries = await collect_entries(self.page)
+        for x in entries:
+            if x['kind'] not in ('anchor', 'tab'):
+                continue
+            if x['text'] == seg or seg in x['text'] or x['text'] in seg:
+                return x
         return None
 
 

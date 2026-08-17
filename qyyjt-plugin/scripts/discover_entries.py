@@ -229,6 +229,15 @@ async def do_discover(args):
                                 except PermissionDenied as ex:
                                     leaf['permission_denied'] = True
                                     leaf['permission_msg'] = str(ex)[:120]
+                                # v3: 记录该叶子页面内的锚点/Tab 入口(可级联进入)
+                                try:
+                                    page_entries = await collect_entries(pg)
+                                    leaf['anchors'] = [x['text'] for x in page_entries
+                                                       if x['kind'] == 'anchor']
+                                    leaf['tabs'] = [x['text'] for x in page_entries
+                                                    if x['kind'] == 'tab']
+                                except Exception:
+                                    pass
                                 log(f'    [{leaf_total[0]}] 叶子[{child["text"]}] '
                                     f'API{len(leaf.get("api") or [])} '
                                     f'表{len(leaf.get("tables") or [])} '
@@ -278,7 +287,7 @@ async def do_discover(args):
         log(f'采集完成: 分支 {len(branches)} 个 = 目录 {len(dirs)} + 叶子 {len(leaves)}'
             + (f'(已探测 {leaf_total[0]} 个叶子数据)' if args.with_data else ''))
         map_data = {
-            'schema': 'v2',
+            'schema': 'v3',
             'subjectType': 'company',
             'subjectName': company[1] if company else '',
             'probedAt': datetime.now().isoformat(timespec='seconds'),

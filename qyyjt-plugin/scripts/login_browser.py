@@ -22,11 +22,23 @@ BASE = Path.home() / '.config' / 'qyyjt-cli'
 
 
 async def is_logged_in(page):
-    """真实登录判定: 页面出现登录用户专属文案'欢迎回来'(游客首页也有 s_tk, 不能只信 token)"""
+    """真实登录判定: 解码 s_tk 的 JWT, userId 以 _<11位手机号> 结尾才算登录。
+
+    游客访问也会生成 s_tk 并显示"欢迎回来", 不能只靠文案/token 存在性。
+    """
     try:
-        text = await page.evaluate(
-            '() => document.body ? document.body.innerText.slice(0, 400) : ""')
-        return '欢迎回来' in text
+        return await page.evaluate("""(function() {
+            try {
+                var t = localStorage.getItem('s_tk');
+                if (!t) return false;
+                var p = t.split('.');
+                if (p.length < 2) return false;
+                var b64 = p[1].replace(/-/g, '+').replace(/_/g, '/');
+                var payload = JSON.parse(atob(b64));
+                var uid = payload.userId || '';
+                return /_\\d{11}$/.test(uid);
+            } catch (e) { return false; }
+        })()""")
     except Exception:
         return False
 

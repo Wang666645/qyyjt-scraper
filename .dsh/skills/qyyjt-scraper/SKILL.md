@@ -47,6 +47,10 @@ $S  = 'qyyjt-plugin\scripts'
 # 4) 抓任意站内 URL(搜索页/榜单页等)
 & $PY $S\qyyjt_fetch.py --url "https://www.qyyjt.cn/s?tab=securities&k=重庆"
 
+# 4.5) 结构扫描 -> 按需打开(两步走, 省配额)
+& $PY $S\qyyjt_fetch.py "企业名" --scan                             # 扫描全部入口清单(约10-12次查询)
+& $PY $S\qyyjt_fetch.py "企业名" --open --entry "财务数据/主要财务指标"  # 校验scan缓存后路径直达
+
 # 5) 入口编码发现(回答"网站能查什么"): 枚举+点击探测, 生成入口地图
 & $PY $S\discover_entries.py "企业名" --list          # 只枚举(不耗配额)
 & $PY $S\discover_entries.py "企业名" --probe 5       # 探测前5个入口的API+表格结构

@@ -47,6 +47,10 @@ $S  = 'qyyjt-plugin\scripts'
 # 4) 抓任意站内 URL(搜索页/榜单页等)
 & $PY $S\qyyjt_fetch.py --url "https://www.qyyjt.cn/s?tab=securities&k=重庆"
 
+# 4.5) 结构扫描 -> 按需打开(两步走, 省配额)
+& $PY $S\qyyjt_fetch.py "企业名" --scan                             # 扫描全部入口清单(约10-12次查询)
+& $PY $S\qyyjt_fetch.py "企业名" --open --entry "财务数据/主要财务指标"  # 校验scan缓存后路径直达
+
 # 5) 入口编码发现(回答"网站能查什么"): 枚举+点击探测, 生成入口地图
 & $PY $S\discover_entries.py "企业名" --list          # 只枚举(不耗配额)
 & $PY $S\discover_entries.py "企业名" --probe 5       # 探测前5个入口的API+表格结构
@@ -77,7 +81,7 @@ $S  = 'qyyjt-plugin\scripts'
 - 非表格(div/卡片/列表渲染): 自动提取 `blocks`(键值对/列表/卡片) + `text_snapshot` 正文兜底
 - 每次抓取同时拦截后端 API(端点编码 + 完整 JSON, `--full-api` 开启)
 
-## 债券核查任务模板（与旧脚本同标准）
+## 债券核查任务模板（旧脚本同标准）
 
 1. `qyyjt_fetch.py "公司名" --entry "债券融资"`：判据 = 页面出现存续债券数据（债券表有数据行 / 存量概览"债券N只"N>0）
 2. 对名单批量执行: 逐行取 B/C/D 列公司名 → 上述命令 → 按结果在 Excel A 列标"发债主体"

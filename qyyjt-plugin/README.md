@@ -77,6 +77,10 @@ $S  = 'qyyjt-plugin\scripts'
 & $PY $S\qyyjt_fetch.py "企业名" --entry "财务数据/资产负债表" --params "报告期=2025年报&合并=合并期末" --out 报表.xlsx
 & $PY $S\qyyjt_fetch.py "企业名" --entry "财务数据/资产负债表" --map data\site_map.json
 
+# 结构扫描 -> 按需打开(两步走, 省配额)
+& $PY $S\qyyjt_fetch.py "企业名" --scan                              # 扫描全部入口(约10-12次查询)
+& $PY $S\qyyjt_fetch.py "企业名" --open --entry "财务数据/主要财务指标"  # 校验scan缓存后路径直达
+
 # 入口编码发现 / 分支地图(逐目录递归采集, 耗配额)
 & $PY $S\discover_entries.py "企业名" --list
 & $PY $S\discover_entries.py "企业名" --probe-recursive 5 --out data\site_map.json

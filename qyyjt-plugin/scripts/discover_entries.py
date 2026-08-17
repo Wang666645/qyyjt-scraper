@@ -143,14 +143,33 @@ async def do_discover(args):
 
     # ---- 递归探测: 逐目录采集全部分支 (P3, 手风琴菜单适配) ----
     if args.probe_recursive:
+        from urllib.parse import urlparse, parse_qsl
+        from branch_nav import MatrixParser
         log('\n=== 逐目录递归采集分支(手风琴菜单: 每次只展开一个目录) ===')
         nav = BranchNavigator(pg, log)
         branches, seen = [], set()
         dir_limit = int(args.probe_recursive) if str(args.probe_recursive).isdigit() else None
         dir_count = [0]
         status = EXIT_OK
+        leaf_total = [0]
+
+        def extract_param_template(apis):
+            """从 API URL 提取参数模板(跳过动态参数)"""
+            tmpl = {}
+            skip = ('code', 'key', 'token', 'accessToken', 'sign', 'timestamp', 't')
+            for a in apis or []:
+                try:
+                    u = urlparse(a['url'])
+                    for k, v in parse_qsl(u.query):
+                        if k in skip or k in tmpl:
+                            continue
+                        tmpl[k] = v
+                except Exception:
+                    pass
+            return tmpl or None
 
         async def probe_dir(path, depth):
+            nonlocal status
             if depth > 2 or status != EXIT_OK:
                 return
             tree = await collect_tree(pg)
@@ -166,10 +185,12 @@ async def do_discover(args):
                 e = await nav.navigate(path, wait_ms=2500)
                 if e is None:
                     log(f'  导航失败: {" / ".join(path)}')
+                    await goto_overview(pg, company[0], wait_menu=False)
                     return
                 tree = await collect_tree(pg)
                 root = locate_path(tree, path)
                 if root is None:
+                    await goto_overview(pg, company[0], wait_menu=False)
                     return
             for child in root.get('children', []):
                 p = path + [child['text']]
@@ -181,7 +202,57 @@ async def do_discover(args):
                     branches.append({'path': p, 'type': 'dir'})
                     await probe_dir(p, depth + 1)
                 else:
-                    branches.append({'path': p, 'type': 'leaf'})
+                    leaf = {'path': p, 'type': 'leaf'}
+                    # --with-data: 逐叶子点击采集 API/表格/矩阵/权限/参数模板
+                    if args.with_data:
+                        leaf_total[0] += 1
+                        try:
+                            cap = ApiCapture(pg, keep_full=False)
+                            e2 = await nav.navigate(p, wait_ms=4000)
+                            await cap.drain()
+                            if e2 is not None:
+                                leaf['api'] = cap.summary()
+                                leaf['paramTemplate'] = extract_param_template(leaf['api'])
+                                try:
+                                    await check_permission(pg, f"入口[{child['text']}]")
+                                    tables = await extract_tables(pg)
+                                    leaf['tables'] = [{'headers': t['headers'],
+                                                       'rowCount': t['rowCount']}
+                                                      for t in tables][:5]
+                                    try:
+                                        mtx = await MatrixParser.extract(pg)
+                                        leaf['matrix'] = [{'headers': m['headers'],
+                                                           'rows': len(m['rows'])}
+                                                          for m in mtx]
+                                    except Exception:
+                                        leaf['matrix'] = []
+                                except PermissionDenied as ex:
+                                    leaf['permission_denied'] = True
+                                    leaf['permission_msg'] = str(ex)[:120]
+                                log(f'    [{leaf_total[0]}] 叶子[{child["text"]}] '
+                                    f'API{len(leaf.get("api") or [])} '
+                                    f'表{len(leaf.get("tables") or [])} '
+                                    f'矩阵{len(leaf.get("matrix") or [])}'
+                                    + (' 权限不足' if leaf.get('permission_denied') else ''))
+                            else:
+                                log(f'    [{leaf_total[0]}] 叶子[{child["text"]}] 导航失败')
+                                await goto_overview(pg, company[0], wait_menu=False)
+                        except QuotaExceeded as ex:
+                            log(f'!!! 配额停止: {ex}')
+                            status = EXIT_QUOTA
+                            branches.append(leaf)
+                            return
+                    branches.append(leaf)
+
+        async def reset_tree():
+            """重置到详情页并等菜单树完整加载(展开其他目录后 level-0 目录会从 DOM 卸载)"""
+            await goto_overview(pg, company[0])
+            for _ in range(12):
+                n = await pg.evaluate(
+                    '() => document.querySelectorAll(".ant-tree-treenode").length')
+                if n > 10:
+                    return
+                await pg.wait_for_timeout(1000)
 
         try:
             tree0 = await collect_tree(pg)
@@ -194,6 +265,7 @@ async def do_discover(args):
                 seen.add(key)
                 if child.get('expandable'):
                     branches.append({'path': [child['text']], 'type': 'dir'})
+                    await reset_tree()
                     await probe_dir([child['text']], 1)
                 else:
                     branches.append({'path': [child['text']], 'type': 'leaf'})
@@ -203,7 +275,8 @@ async def do_discover(args):
 
         leaves = [b for b in branches if b['type'] == 'leaf']
         dirs = [b for b in branches if b['type'] == 'dir']
-        log(f'采集完成: 分支 {len(branches)} 个 = 目录 {len(dirs)} + 叶子 {len(leaves)}')
+        log(f'采集完成: 分支 {len(branches)} 个 = 目录 {len(dirs)} + 叶子 {len(leaves)}'
+            + (f'(已探测 {leaf_total[0]} 个叶子数据)' if args.with_data else ''))
         map_data = {
             'schema': 'v2',
             'subjectType': 'company',
@@ -235,6 +308,8 @@ async def main():
     ap.add_argument('--probe', nargs='?', const='all', help='逐个点击探测并记录 API/表格(可给数字 N)')
     ap.add_argument('--probe-recursive', nargs='?', const='all',
                     help='逐目录递归采集全部分支 -> site_map v2(耗配额, 可给目录数上限)')
+    ap.add_argument('--with-data', action='store_true',
+                    help='(配 --probe-recursive) 逐叶子点击采集 API/表格/矩阵/权限/参数模板(每个叶子约1次查询)')
     ap.add_argument('--expand', action='store_true', help='先递归展开树菜单(可能耗配额)')
     ap.add_argument('--site', action='store_true', help='站点级入口发现(首页导航链接)')
     ap.add_argument('--out', default=None, help='输出 json 路径(默认 data/entries_map.json)')

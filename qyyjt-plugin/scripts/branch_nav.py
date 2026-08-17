@@ -52,9 +52,16 @@ class BranchNavigator:
         """按文本路径导航: 中间级逐级展开, 末级点击进入。
 
         每步点击后比对内容签名: 无变化视为点击未生效, 自动重试(retries 次)。
+        中间级若已展开(sw=open)则跳过点击, 避免收起已展开目录。
         返回末级入口 dict 或 None。
         """
         for i in range(len(path) - 1):
+            tree = await collect_tree(self.page)
+            e = locate_path(tree, path[:i + 1])
+            if e is None:
+                return None
+            if e.get('sw') == 'open':
+                continue  # 已展开, 无需点击
             ok = False
             for attempt in range(retries + 1):
                 before = await self._signature()
@@ -77,21 +84,16 @@ class BranchNavigator:
             if not ok:
                 self.log(f'!! 展开[{path[i]}] 多次尝试无效果')
                 return None
-        # 末级
-        for attempt in range(retries + 1):
-            before = await self._signature()
-            tree = await collect_tree(self.page)
-            e = locate_path(tree, path)
-            if e is None:
-                return None
-            clicked = await click_entry(self.page, {'kind': 'tree', 'index': e['index']},
-                                        wait_ms=wait_ms)
-            await self.wait_stable()
-            after = await self._signature()
-            if clicked and (after != before):
-                return e
-            self.log(f'    点击[{path[-1]}] 未生效, 重试 {attempt + 1}/{retries}')
-        self.log(f'!! 点击[{path[-1]}] 多次尝试无效果')
+        # 末级: 点击即返回(不校验签名——目标页面可能与当前相同, 签名无变化不代表失败;
+        # 加载失败/权限不足由后续 check_quota/check_permission 兜底)
+        tree = await collect_tree(self.page)
+        e = locate_path(tree, path)
+        if e is None:
+            return None
+        clicked = await click_entry(self.page, {'kind': 'tree', 'index': e['index']},
+                                    wait_ms=wait_ms)
+        if clicked:
+            return e
         return None
 
 

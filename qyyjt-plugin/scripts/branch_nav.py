@@ -18,8 +18,8 @@ import re
 from urllib.parse import urlparse, parse_qsl, urlencode
 
 from qyyjt_common import (collect_tree, locate_path, find_in_level, click_entry,
-                          check_quota, check_permission, collect_entries,
-                          PermissionDenied, QuotaExceeded)
+                          click_tree_entry, check_quota, check_permission,
+                          collect_entries, PermissionDenied, QuotaExceeded)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -107,16 +107,11 @@ class BranchNavigator:
                         return None
                 if e.get('kind') == 'tree' and not e.get('expandable'):
                     # 叶子中间级: 点击进入其页面(点击成功即返回, 无变化不代表失败)
-                    clicked = await click_entry(self.page,
-                                                {'kind': 'tree', 'index': e['index']},
-                                                wait_ms=2500)
+                    clicked = await click_tree_entry(self.page, e, wait_ms=2500)
                     await self.wait_stable()
                     ok = clicked
                     break
-                clicked = await click_entry(self.page,
-                                            {'kind': e.get('kind', 'tree'),
-                                             'index': e['index']},
-                                            wait_ms=2500)
+                clicked = await click_tree_entry(self.page, e, wait_ms=2500)
                 await self.wait_stable()
                 after = await self._signature()
                 if clicked and (after != before):
@@ -124,14 +119,14 @@ class BranchNavigator:
                     break
                 self.log(f'    展开[{path[i]}] 未生效, 重试 {attempt + 1}/{retries}')
             if not ok:
-                self.log(f'!! 展开[{path[i]}] 多次尝试无效果')
+                self.log(f'!! 展开[{path[i]}] 多次尝试无效果'
+                         f'(站点端未响应: 可能该企业/账号下此目录不可展开, 或需人工确认)')
                 return None
         # 末级: 树节点优先, 否则当前页面 anchor/tab
         tree = await collect_tree(self.page)
         e = locate_path_fuzzy(tree, path)
         if e is not None:
-            clicked = await click_entry(self.page, {'kind': 'tree', 'index': e['index']},
-                                        wait_ms=wait_ms)
+            clicked = await click_tree_entry(self.page, e, wait_ms=wait_ms)
             if clicked:
                 return e
             return None

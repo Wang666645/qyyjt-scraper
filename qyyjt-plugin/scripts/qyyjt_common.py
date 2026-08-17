@@ -222,6 +222,7 @@ async def collect_tree(page):
         var out = [];
         var wrappers = Array.prototype.slice.call(
             document.querySelectorAll('.ant-tree-node-content-wrapper'));
+        var seqCount = {};
         document.querySelectorAll('.ant-tree-treenode').forEach(function(n) {
             var title = n.querySelector('.ant-tree-title');
             var sw = n.querySelector('.ant-tree-switcher');
@@ -233,8 +234,11 @@ async def collect_tree(page):
             var swState = swCls.indexOf('open') >= 0 ? 'open'
                         : swCls.indexOf('close') >= 0 ? 'close' : 'leaf';
             var w = n.querySelector('.ant-tree-node-content-wrapper');
+            // seq: 同文本节点在 DOM 中的第几个(解决 城投分析x2/融资速览x2 同名歧义)
+            var key = text;
+            var seq = seqCount[key] = (seqCount[key] || 0) + 1;
             out.push({text: text, level: m ? parseInt(m[1]) : 0,
-                      sw: swState, index: w ? wrappers.indexOf(w) : -1});
+                      sw: swState, index: w ? wrappers.indexOf(w) : -1, seq: seq});
         });
         return out;
     })()""")
@@ -247,7 +251,8 @@ def rebuild_tree(flat):
     for f in flat:
         node = {'text': f['text'], 'level': f['level'], 'kind': 'tree',
                 'expandable': f['sw'] in ('open', 'close'),
-                'sw': f['sw'], 'index': f['index'], 'children': []}
+                'sw': f['sw'], 'index': f['index'], 'seq': f.get('seq', 1),
+                'children': []}
         while stack and stack[-1][1] >= f['level']:
             stack.pop()
         if stack:
@@ -313,7 +318,7 @@ async def click_path(page, path, wait_ms=5000):
         if e is None:
             return None
         if e.get('expandable'):
-            ok = await click_entry(page, {'kind': 'tree', 'index': e['index']}, wait_ms=2500)
+            ok = await click_tree_entry(page, e, wait_ms=2500)
             if not ok:
                 return None
     tree = await collect_tree(page)
@@ -321,9 +326,9 @@ async def click_path(page, path, wait_ms=5000):
     if e is None:
         return None
     if e.get('expandable'):
-        await click_entry(page, {'kind': 'tree', 'index': e['index']}, wait_ms=2500)
+        await click_tree_entry(page, e, wait_ms=2500)
     else:
-        ok = await click_entry(page, {'kind': 'tree', 'index': e['index']}, wait_ms=wait_ms)
+        ok = await click_tree_entry(page, e, wait_ms=wait_ms)
         if not ok:
             return None
     return e
@@ -422,6 +427,35 @@ async def expand_tree_for_keyword(page, query, depth=3):
         if any(kw in e['text'] or e['text'] in kw for e in entries):
             return entries
     return await collect_entries(page)
+
+
+async def click_tree_entry(page, entry, wait_ms=5000):
+    """按 文本+同名词序号 点击树节点(不依赖易漂移的 DOM index)。
+
+    同名词(如 城投分析x2)用 seq 区分; 精确匹配优先, 回退子串匹配。
+    返回是否点击成功。
+    """
+    ok = await page.evaluate("""(function(arg) {
+        var seg = arg.text, want = (arg.seq || 1) - 1, n = 0;
+        var nodes = document.querySelectorAll('.ant-tree-node-content-wrapper');
+        // 先精确匹配
+        var exact = [];
+        var fuzzy = [];
+        for (var i = 0; i < nodes.length; i++) {
+            var t = (nodes[i].innerText || '').replace(/\\s+/g, ' ').trim();
+            if (t === seg) exact.push(nodes[i]);
+            else if (t.indexOf(seg) >= 0) fuzzy.push(nodes[i]);
+        }
+        var pool = exact.length ? exact : fuzzy;
+        if (!pool.length) return false;
+        if (want >= pool.length) want = pool.length - 1;
+        pool[want].click();
+        return true;
+    })""", {'text': entry['text'], 'seq': entry.get('seq', 1)})
+    if ok:
+        await page.wait_for_timeout(wait_ms)
+        await check_quota(page, f"点击[{entry.get('text', '')}]")
+    return ok
 
 
 async def click_entry(page, entry, wait_ms=5000):

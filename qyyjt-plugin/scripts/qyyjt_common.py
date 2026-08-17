@@ -34,6 +34,16 @@ STATIC_RE = re.compile(r'\.(js|css|png|jpe?g|gif|svg|woff2?|ttf|ico|map)(\?|$)',
 EXIT_OK, EXIT_ERR, EXIT_QUOTA, EXIT_LOGIN, EXIT_NOTFOUND, EXIT_PERM = 0, 1, 2, 3, 4, 5
 
 
+def resolve_profile(name):
+    """--profile 参数归一化: 名字 -> ~/.config/qyyjt-cli/browser-profile-<名>; 路径 -> 原样。"""
+    if not name:
+        return USER_DATA
+    p = Path(name)
+    if p.is_absolute() or ('\\' in name) or ('/' in name):
+        return p
+    return USER_DATA.parent / f'browser-profile-{name}'
+
+
 class QuotaExceeded(Exception):
     pass
 
@@ -52,7 +62,7 @@ class PermissionDenied(Exception):
 # ═══════════════════════════════════════════════════════════
 async def open_browser(headless=True, profile=None, timeout=20000):
     """打开持久化上下文并做登录检查。返回 (playwright, context, page)。"""
-    ud = Path(profile) if profile else USER_DATA
+    ud = resolve_profile(profile)
     p = await async_playwright().start()
     b = await p.chromium.launch_persistent_context(
         user_data_dir=str(ud), headless=headless,

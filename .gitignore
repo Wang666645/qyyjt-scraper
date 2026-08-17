@@ -15,3 +15,6 @@ desktop.ini
 # 抓取输出产物(可能含业务数据, 不提交; 建议输出到 qyyjt-plugin/output/)
 qyyjt-plugin/output/
 *.xlsx
+
+# 企业采集数据(scan 清单/全量地图/入口地图)不入库, 需要时现场生成
+qyyjt-plugin/data/
